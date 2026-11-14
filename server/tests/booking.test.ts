@@ -111,7 +111,7 @@ describe('Feature F-02: Patient Slot Discovery & Booking Integration Tests', () 
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toContain('Only customers can book appointments');
+      expect(res.body.error).toContain('Forbidden: Access restricted to [CUSTOMER]');
     });
 
     it('should reject with 400 when required fields are missing', async () => {
