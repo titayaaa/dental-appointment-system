@@ -6,7 +6,14 @@ const DENTISTS = [
   { id: 'dentist-suda', name: 'ทพญ.สุดา รักฟัน', specialty: 'ทันตกรรมจัดฟัน' },
 ];
 
-const SERVICES = ['ขูดหินปูน', 'อุดฟัน', 'ตรวจฟันประจำปี', 'ถอนฟัน', 'ปรึกษาจัดฟัน'];
+const SERVICES = [
+  'ขูดหินปูน',
+  'อุดฟัน',
+  'ตรวจฟันประจำปี',
+  'ถอนฟัน',
+  'ปรึกษาจัดฟัน',
+  'อื่นๆ (ระบุในข้อมูลเพิ่มเติม)',
+];
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -140,6 +147,12 @@ export default function App() {
 
   const handleBookSlot = async () => {
     if (!activeSlot) return;
+
+    if (serviceType.includes('อื่นๆ') && !reasonForVisit.trim()) {
+      setConflictError('⚠️ กรณีเลือกบริการ "อื่นๆ" กรุณากรอกรายละเอียดอาการหรือสิ่งที่ต้องการทำในช่องข้อมูลเพิ่มเติม');
+      return;
+    }
+
     setSubmittingBooking(true);
     setConflictError(null);
 
@@ -507,11 +520,17 @@ export default function App() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">อาการเบื้องต้น / ข้อมูลเพิ่มเติม (ถ้ามี)</label>
+                <label className="form-label">
+                  อาการเบื้องต้น / ข้อมูลเพิ่มเติม {serviceType.includes('อื่นๆ') ? <span style={{ color: 'var(--danger)', fontWeight: 600 }}>* (จำเป็นต้องระบุ)</span> : '(ถ้ามี)'}
+                </label>
                 <textarea
                   className="form-control"
                   rows={3}
-                  placeholder="เช่น เสียวฟันกรามล่างขวา หรือต้องการตรวจเช็กฟันคุด"
+                  placeholder={
+                    serviceType.includes('อื่นๆ')
+                      ? 'โปรดระบุบริการทันตกรรม หรืออาการที่ต้องการปรึกษา/รักษา เช่น ผ่าฟันคุด, ฟอกสีฟัน, ปวดฟันกราม...'
+                      : 'เช่น เสียวฟันกรามล่างขวา หรือต้องการตรวจเช็กฟันคุด'
+                  }
                   value={reasonForVisit}
                   onChange={(e) => setReasonForVisit(e.target.value)}
                 />
@@ -547,3 +566,4 @@ export default function App() {
     </div>
   );
 }
+

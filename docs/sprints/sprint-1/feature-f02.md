@@ -64,8 +64,8 @@ sequenceDiagram
      - Available slots are highlighted in green with a "จองเวลานี้ (Book Now)" button.
   4. **Booking Confirmation Modal:**
      - Displays summary: Dentist Name, Selected Date, Time Range.
-     - Dropdown: `serviceType` (`ขูดหินปูน`, `อุดฟัน`, `ตรวจฟันประจำปี`, `ถอนฟัน`).
-     - Textarea: `reasonForVisit` (optional symptoms description, max 500 characters).
+     - Dropdown: `serviceType` (`ขูดหินปูน`, `อุดฟัน`, `ตรวจฟันประจำปี`, `ถอนฟัน`, `ปรึกษาจัดฟัน`, `อื่นๆ (ระบุในข้อมูลเพิ่มเติม)`).
+     - Textarea: `reasonForVisit` (symptoms description or specifics if 'อื่นๆ' is chosen, max 500 characters).
      - Action buttons: "ยืนยันการจอง (Confirm)" and "ยกเลิก (Dismiss)".
 * **Shared UI States:**
   - **Loading State:** Skeleton shimmer over slot grid while fetching.
