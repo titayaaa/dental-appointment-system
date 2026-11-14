@@ -341,3 +341,4 @@ export async function cancelMyAppointment(req: AuthenticatedRequest, res: Respon
     });
   }
 }
+

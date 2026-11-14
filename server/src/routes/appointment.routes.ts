@@ -19,3 +19,4 @@ router.get('/my-appointments', requireAuth, requireRole([Role.CUSTOMER]), getMyA
 router.patch('/my-appointments/:id/cancel', requireAuth, requireRole([Role.CUSTOMER]), cancelMyAppointment);
 
 export default router;
+
