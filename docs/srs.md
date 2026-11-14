@@ -8,7 +8,7 @@
 
 ### 2. Actors and Responsibilities
 * **CUSTOMER (Patient):**
-  - Authenticates securely.
+  - Authenticates securely via email and password.
   - Explores dental specialists and real-time available time slots.
   - Books an appointment for a specific dental service and provides reason for visit.
   - Views their own appointment history and real-time status.
@@ -49,9 +49,12 @@
 * **BR-06 (Slot Release on Cancellation):** When an appointment transitions to `CANCELLED_CONFLICT` or `CANCELLED_BY_CUSTOMER`, its associated time slot status must immediately revert to `AVAILABLE`.
 
 ### 6. Non-Functional Requirements (NFR)
-* **NFR-01 (Security & Authorization):** Unauthenticated requests to protected resources must return HTTP 401. Unauthorized role access must return HTTP 403 without leaking entity metadata.
-* **NFR-02 (Concurrency & Data Consistency):** Concurrent booking requests for the last available slot must guarantee exactly one successful reservation via database transaction and unique constraints.
-* **NFR-03 (Response Time):** API response times for slot availability and booking requests shall be under 500ms under standard local execution.
+
+| NFR ID | Requirement Title | Measurable Target | Practical Verification Method | Target Sprint |
+| :---: | :--- | :--- | :--- | :---: |
+| **NFR-01** | **Security & Access Control** | 100% of unauthenticated requests to protected routes return HTTP 401; 100% of unauthorized role requests and cross-patient record queries return HTTP 403 without data leakage. | Automated API Integration Test Suite (`TEST-SEC-01`, `TEST-SEC-02`, `TEST-SEC-03`) | **Sprint 1** |
+| **NFR-02** | **Concurrency & Data Consistency** | Under 10 simultaneous concurrent booking requests for a single slot, exactly 1 succeeds (201) and 9 are rejected (409). 0 duplicate appointments in DB. | Concurrency integration test (`TEST-CONC-01`) using parallel asynchronous promises | **Sprint 1** |
+| **NFR-03** | **API Response Time** | 95th percentile response latency under 500ms for slot queries and booking requests on local development execution. | Automated latency profiling test assertion (`TEST-PERF-01`) | **Sprint 1** |
 
 ### 7. Assumptions, Design Decisions, and Questions & Resolutions
 * **Assumption 1 (Fixed Operatory Slots):** Standard dental procedures are planned around discrete 30-minute blocks, allowing staff to schedule predictable consultation rounds.

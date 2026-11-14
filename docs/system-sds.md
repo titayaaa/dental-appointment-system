@@ -3,6 +3,7 @@
 
 ### 1. Technology Stack & Component Responsibilities
 * **Frontend:** React 18 + TypeScript + Vite + TailwindCSS
+  - Client-side Single Page Application (SPA).
   - Role-based routing: `/staff/*` restricted to staff, `/booking` and `/my-appointments` for patients.
   - State management and API integration with safe empty/loading/error boundaries.
 * **Backend:** Node.js 24 + Express + TypeScript
@@ -11,7 +12,41 @@
 * **Database:** PostgreSQL with Prisma ORM
   - Strong schema constraints, transactional booking operations, and foreign keys.
 
-### 2. Entity-Relationship Model (5 Entities)
+### 2. Full-Stack Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph ClientLayer ["Client Layer (React 18 + Vite SPA)"]
+        UI_Auth["Login View (/login)"]
+        UI_Customer["Customer Views<br/>• Slot Browser (/booking)<br/>• My Appointments (/my-appointments)"]
+        UI_Staff["Staff Views<br/>• Schedule Planner (/staff/schedules)<br/>• Master Dashboard (/staff/appointments)"]
+    end
+
+    subgraph ApiLayer ["Application Layer (Express + TypeScript)"]
+        MW_Auth["Authentication Middleware<br/>(requireAuth / JWT Verify)"]
+        MW_Role["Role Guard Middleware<br/>(requireRole: STAFF vs CUSTOMER)"]
+        Router_Auth["/api/auth Router"]
+        Router_Cust["/api/slots & /api/appointments Router"]
+        Router_Staff["/api/admin Router"]
+        Service_Booking["Booking & Concurrency Service"]
+        Service_Schedule["Schedule & Slot Service"]
+    end
+
+    subgraph DataLayer ["Data & Persistence Layer"]
+        Prisma["Prisma ORM Client"]
+        Postgres[("PostgreSQL 16 Database<br/>Users, Dentists, Schedules, Slots, Appointments")]
+    end
+
+    ClientLayer -->|HTTP / JSON + Bearer JWT| MW_Auth
+    MW_Auth --> MW_Role
+    MW_Role --> Router_Auth & Router_Cust & Router_Staff
+    Router_Cust --> Service_Booking
+    Router_Staff --> Service_Schedule
+    Service_Booking & Service_Schedule --> Prisma
+    Prisma -->|SQL Queries & Transactions| Postgres
+```
+
+### 3. Entity-Relationship Model (5 Entities)
 
 ```mermaid
 erDiagram
@@ -69,7 +104,20 @@ erDiagram
     }
 ```
 
-### 3. Database Setup, Migrations & Seed Procedure
+### 4. Main Screens, Navigation Flow & Shared UI States
+* **Screen Navigation Hierarchy:**
+  - `/login`: Public authentication entry point. On success, redirects based on role (`STAFF` -> `/staff/appointments`, `CUSTOMER` -> `/booking`).
+  - `/booking`: Patient slot selector with calendar/grid view, doctor filter, and booking confirmation modal.
+  - `/my-appointments`: Patient's personal appointment list with status badges and cancel action.
+  - `/staff/schedules`: Administrative provider duty hours manager and slot generator.
+  - `/staff/appointments`: Master appointment queue with real-time status review modal (Confirm/Reject).
+* **Shared UI Behavior & States:**
+  - **Loading States:** Skeleton placeholders on cards and tables while asynchronous API fetches execute.
+  - **Empty States:** Clear messaging with call-to-actions when records are zero (e.g. *"No appointments found. Book your first visit today!"*).
+  - **Error States:** Toast alerts and inline field warnings on failed requests (e.g. displaying specific 409 conflict messages).
+  - **Validation States:** Real-time form validation blocking past dates and negative working durations before submission.
+
+### 5. Database Setup, Migrations & Seed Procedure
 * **Setup & Migration Commands:**
   ```bash
   # Initialize schema and apply initial migration
@@ -87,13 +135,13 @@ erDiagram
   - Customer 2: `customer2@test.com` (Hash of `password123`, Role: `CUSTOMER`)
   - Dentists: Dr. Somchai (General Dentistry), Dr. Suda (Orthodontics) with 30-minute availability slots.
 
-### 4. Credential Handling, Session & Logout Design
+### 6. Credential Handling, Session & Logout Design
 * **Password Security:** Passwords hashed with `bcryptjs` using 10 salt rounds prior to storage. Plaintext passwords never logged or returned.
 * **Token Issuance:** Upon successful verification at `POST /api/auth/login`, an HMAC-SHA256 JWT is issued containing `{ id, email, role }` with a 24-hour expiration (`exp: 24h`).
 * **Session Enforcement:** Secured endpoints extract token from `Authorization: Bearer <token>`. `requireAuth` validates token integrity and attaches `req.user`. `requireRole` checks role permissions.
 * **Logout Behavior:** Handled client-side by invalidating and removing the stored token from `localStorage`/`sessionStorage` and redirecting to `/login`.
 
-### 5. Configuration & Environment Variables
+### 7. Configuration & Environment Variables
 Every setting is externalized into environment variables; no real credentials are committed to Git:
 
 | Variable Name | Purpose | Example / Default Value | Secret? |
@@ -104,14 +152,14 @@ Every setting is externalized into environment variables; no real credentials ar
 | `NODE_ENV` | Runtime environment | `development` / `production` | No |
 | `CLIENT_URL` | Allowed CORS origin for frontend | `http://localhost:5173` | No |
 
-### 6. Planned GCP Cloud Deployment Components (Lab 5 Alignment)
+### 8. Planned GCP Cloud Deployment Components (Lab 5 Alignment)
 * **Compute:** Containerized full-stack application deployed on **Google Cloud Run** with min instances = 0 (scales to zero to eliminate idle billing).
 * **Persistence:** **Cloud SQL for PostgreSQL** (Enterprise edition, `db-f1-micro` tier, single-zone, storage auto-increase disabled for cost control).
 * **Image Registry:** **Artifact Registry** storing multi-stage Docker images tagged by full Git commit SHA.
 * **Secret Management:** Runtime secrets (`DATABASE_URL`, `JWT_SECRET`) managed via **Google Secret Manager** and injected into Cloud Run container environment securely.
 * **CI/CD Pipeline:** **GitHub Actions** connecting to GCP via **Workload Identity Federation (WIF)** without persistent JSON key files.
 
-### 7. Role & Permission Matrix
+### 9. Role & Permission Matrix
 
 | Operation / Endpoint | Public | CUSTOMER | STAFF |
 | :--- | :---: | :---: | :---: |
@@ -127,7 +175,7 @@ Every setting is externalized into environment variables; no real credentials ar
 | `GET /api/admin/appointments` | No | No | **Yes (All)** |
 | `PATCH /api/admin/appointments/:id/status` | No | No | **Yes** |
 
-### 8. API Response Conventions & Error Codes
+### 10. API Response Conventions & Error Codes
 * Standard Success Envelope:
   ```json
   { "success": true, "data": { ... } }
