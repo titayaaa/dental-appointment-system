@@ -6,18 +6,128 @@ const DENTISTS = [
   { id: 'dentist-suda', name: 'ทพญ.สุดา รักฟัน', specialty: 'ทันตกรรมจัดฟัน' },
 ];
 
-const SERVICES = [
-  'ขูดหินปูน',
-  'อุดฟัน',
-  'ตรวจฟันประจำปี',
-  'ถอนฟัน',
-  'ปรึกษาจัดฟัน',
-  'อื่นๆ (ระบุในข้อมูลเพิ่มเติม)',
+export interface DentalProcedure {
+  id: string;
+  name: string;
+  category: 'ทันตกรรมทั่วไป' | 'ทันตกรรมเฉพาะทาง' | 'ทันตกรรมเพื่อความงาม' | 'ตรวจรักษาเฉพาะบุคคล';
+  description: string;
+  durationMinutes: number;
+  priceRange: string;
+  recommendedDentistId: string;
+  icon: string;
+}
+
+export const DENTAL_SERVICES_CATALOG: DentalProcedure[] = [
+  {
+    id: 'scaling',
+    name: 'ขูดหินปูนและขัดฟัน (Scaling & Polishing)',
+    category: 'ทันตกรรมทั่วไป',
+    description: 'ขจัดคราบหินปูนและคราบชา กาแฟ บุหรี่ เพื่อสุขภาพเหงือกและฟันที่ดี ป้องกันโรคเหงือกอักเสบและกลิ่นปาก',
+    durationMinutes: 30,
+    priceRange: '800 - 1,200 ฿',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '✨',
+  },
+  {
+    id: 'filling',
+    name: 'อุดฟันด้วยวัสดุสีเหมือนฟัน (Composite Filling)',
+    category: 'ทันตกรรมทั่วไป',
+    description: 'รักษาฟันผุ ฟันบิ่น หรือฟันสึก ด้วยวัสดุคอมโพสิตเรซินสีธรรมชาติ กลมกลืนกับเนื้อฟัน แข็งแรง ทนทาน',
+    durationMinutes: 30,
+    priceRange: '800 - 1,500 ฿/ซี่',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '🦷',
+  },
+  {
+    id: 'checkup',
+    name: 'ตรวจสุขภาพฟันและช่องปากประจำปี (Dental Checkup)',
+    category: 'ทันตกรรมทั่วไป',
+    description: 'ตรวจสุขภาพฟัน เหงือก และเนื้อเยื่อในช่องปากอย่างละเอียดโดยทันตแพทย์ เพื่อป้องกันและคัดกรองโรคช่องปาก',
+    durationMinutes: 30,
+    priceRange: '300 - 500 ฿ (ฟรีเมื่อทำหัตถการอื่น)',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '🔍',
+  },
+  {
+    id: 'extraction',
+    name: 'ถอนฟันธรรมดา (Simple Tooth Extraction)',
+    category: 'ทันตกรรมทั่วไป',
+    description: 'ถอนฟันที่ไม่สามารถเก็บรักษาไว้ได้ เช่น ฟันผุทะลุโพรงประสาทรุนแรง ฟันโยกมากจากโรคปริทันต์',
+    durationMinutes: 30,
+    priceRange: '800 - 1,500 ฿/ซี่',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '🩹',
+  },
+  {
+    id: 'wisdom-tooth',
+    name: 'ผ่าฟันคุด / ถอนฟันคุด (Wisdom Tooth Surgery)',
+    category: 'ทันตกรรมเฉพาะทาง',
+    description: 'ผ่าตัดนำฟันคุดที่ฝังใต้เหงือกหรือกระดูกขากรรไกรออก ป้องกันฟันข้างเคียงผุ อาการปวดบวม และการอักเสบติดเชื้อ',
+    durationMinutes: 30,
+    priceRange: '2,000 - 4,500 ฿/ซี่',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '🩺',
+  },
+  {
+    id: 'root-canal',
+    name: 'รักษารากฟัน (Root Canal Treatment)',
+    category: 'ทันตกรรมเฉพาะทาง',
+    description: 'รักษาอาการปวดฟันรุนแรงจากการติดเชื้อในโพรงประสาทฟัน กำจัดเชื้อโรคและอุดคลองรากฟันเพื่อเก็บฟันแท้ไว้',
+    durationMinutes: 30,
+    priceRange: '4,500 - 8,000 ฿',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '🔬',
+  },
+  {
+    id: 'ortho-consult',
+    name: 'ปรึกษาจัดฟันและวางแผนรักษา (Orthodontic Consultation)',
+    category: 'ทันตกรรมเฉพาะทาง',
+    description: 'ตรวจประเมินสบฟัน โครงสร้างขากรรไกร ถ่ายภาพและพิมพ์ปากเพื่อวางแผนจัดฟัน (แบบโลหะ, ดามอน, หรือจัดฟันใส)',
+    durationMinutes: 30,
+    priceRange: '500 - 1,000 ฿',
+    recommendedDentistId: 'dentist-suda',
+    icon: '😁',
+  },
+  {
+    id: 'retainer',
+    name: 'ทำรีเทนเนอร์คงสภาพฟัน (Dental Retainers)',
+    category: 'ทันตกรรมเฉพาะทาง',
+    description: 'พิมพ์ปากทำรีเทนเนอร์แบบใส (Clear Retainer) หรือแบบลวด (Hawley Retainer) หลังถอดเครื่องมือจัดฟัน',
+    durationMinutes: 30,
+    priceRange: '2,000 - 4,500 ฿/คู่',
+    recommendedDentistId: 'dentist-suda',
+    icon: '🛡️',
+  },
+  {
+    id: 'whitening',
+    name: 'ฟอกสีฟันระบบ Cool Light (Teeth Whitening)',
+    category: 'ทันตกรรมเพื่อความงาม',
+    description: 'ปรับเฉดสีฟันให้ขาวกระจ่างใสอย่างปลอดภัยด้วยน้ำยาฟอกสีฟันเกรดพรีเมียมและแสงเย็น ไม่ทำลายผิวเคลือบฟัน',
+    durationMinutes: 60,
+    priceRange: '4,500 - 7,500 ฿',
+    recommendedDentistId: 'dentist-suda',
+    icon: '💎',
+  },
+  {
+    id: 'other',
+    name: 'อื่นๆ (ระบุในข้อมูลเพิ่มเติม)',
+    category: 'ตรวจรักษาเฉพาะบุคคล',
+    description: 'สำหรับอาการปวดฟันเฉียบพลัน, ซ่อมฟันปลอม, ทำครอบฟัน/สะพานฟัน หรือบริการอื่นๆ ที่ต้องการปรึกษาแพทย์',
+    durationMinutes: 30,
+    priceRange: 'ประเมินตามหัตถการจริง',
+    recommendedDentistId: 'dentist-somchai',
+    icon: '📝',
+  },
 ];
+
+const SERVICES = DENTAL_SERVICES_CATALOG.map((s) => s.name);
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'booking' | 'my-appointments'>('booking');
+  const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments'>('booking');
+  const [catalogCategory, setCatalogCategory] = useState<string>('ทั้งหมด');
+  const [catalogSearch, setCatalogSearch] = useState<string>('');
+  const [selectedServiceNotice, setSelectedServiceNotice] = useState<string | null>(null);
 
   // Login form state
   const [email, setEmail] = useState('customer1@test.com');
@@ -188,6 +298,22 @@ export default function App() {
     }
   };
 
+  const filteredProcedures = DENTAL_SERVICES_CATALOG.filter((p) => {
+    const matchesCategory = catalogCategory === 'ทั้งหมด' || p.category === catalogCategory;
+    const matchesSearch =
+      catalogSearch.trim() === '' ||
+      p.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+      p.description.toLowerCase().includes(catalogSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleSelectProcedure = (procedure: DentalProcedure) => {
+    setServiceType(procedure.name);
+    setSelectedDentist(procedure.recommendedDentistId);
+    setSelectedServiceNotice(procedure.name);
+    setCurrentView('booking');
+  };
+
   // If not logged in, show Login Screen
   if (!currentUser) {
     return (
@@ -296,7 +422,13 @@ export default function App() {
       {/* Main Container */}
       <main className="container">
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <button
+            className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setCurrentView('services')}
+          >
+            📖 เมนูบริการและราคา (Service Catalog)
+          </button>
           <button
             className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setCurrentView('booking')}
@@ -321,9 +453,157 @@ export default function App() {
           </div>
         )}
 
+        {/* VIEW 0: SERVICE CATALOG */}
+        {currentView === 'services' && (
+          <div>
+            <div className="card" style={{ background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)', border: '1px solid #bae6fd' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary-hover)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🦷</span> เมนูบริการและอัตราค่ารักษาทันตกรรม (SmileSync Catalog)
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
+                    ตรวจสอบรายละเอียดหัตถการ ระยะเวลาที่ใช้ และราคาประเมินเบื้องต้น หรือกด <strong>"จองบริการนี้ 👉"</strong> เพื่อไปยังตารางนัดหมายได้ทันที
+                  </p>
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setCurrentView('booking')}
+                >
+                  ไปยังหน้าตารางเวลาตรวจ 📅
+                </button>
+              </div>
+
+              {/* Filter Categories & Search Bar */}
+              <div style={{ marginTop: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {['ทั้งหมด', 'ทันตกรรมทั่วไป', 'ทันตกรรมเฉพาะทาง', 'ทันตกรรมเพื่อความงาม', 'ตรวจรักษาเฉพาะบุคคล'].map((cat) => (
+                    <button
+                      key={cat}
+                      className={`btn ${catalogCategory === cat ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '13px', padding: '6px 14px' }}
+                      onClick={() => setCatalogCategory(cat)}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ flex: 1, minWidth: '220px' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="🔍 ค้นหาหัตถการ เช่น ขูดหินปูน, ฟันคุด, ฟอกสีฟัน..."
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    style={{ background: '#fff' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Catalog Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+              {filteredProcedures.map((proc) => {
+                const dentist = DENTISTS.find(d => d.id === proc.recommendedDentistId);
+                return (
+                  <div
+                    key={proc.id}
+                    className="card"
+                    style={{
+                      marginBottom: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      transition: 'all 0.2s ease',
+                      border: '1px solid var(--border)'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '32px' }}>{proc.icon}</span>
+                        <span className="badge" style={{ background: '#e0f2fe', color: '#0369a1', fontSize: '12px' }}>
+                          {proc.category}
+                        </span>
+                      </div>
+                      <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
+                        {proc.name}
+                      </h3>
+                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.5', marginBottom: '16px' }}>
+                        {proc.description}
+                      </p>
+                    </div>
+
+                    <div>
+                      <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', marginBottom: '14px', border: '1px solid #edf2f7' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>⏱️ ระยะเวลาตรวจ:</span>
+                          <strong style={{ color: 'var(--text-main)' }}>~{proc.durationMinutes} นาที</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>🏷️ อัตราค่าบริการประเมิน:</span>
+                          <strong style={{ color: 'var(--primary)' }}>{proc.priceRange}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>👨‍⚕️ ทันตแพทย์แนะนำ:</span>
+                          <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{dentist?.name}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        className="btn btn-primary"
+                        style={{ width: '100%', fontSize: '14px', padding: '8px 14px' }}
+                        onClick={() => handleSelectProcedure(proc)}
+                      >
+                        จองบริการนี้ 👉
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* VIEW 1: BOOKING */}
         {currentView === 'booking' && (
           <div>
+            {/* Banner: Selected from catalog notice */}
+            {selectedServiceNotice ? (
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '14px 20px', borderRadius: '10px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ fontSize: '14px', color: '#166534' }}>
+                  🎯 <strong>บริการที่เลือก:</strong> {selectedServiceNotice} (ทันตแพทย์แนะนำ: <strong>{DENTISTS.find(d => d.id === selectedDentist)?.name}</strong>) — เลือกรอบเวลา 30 นาทีที่ต้องการด้านล่างได้เลยครับ
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '4px 10px' }}
+                    onClick={() => setCurrentView('services')}
+                  >
+                    เปลี่ยนบริการ
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '4px 8px' }}
+                    onClick={() => setSelectedServiceNotice(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', padding: '12px 18px', borderRadius: '10px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                  💡 ต้องการดูรายละเอียดหัตถการ อัตราค่าบริการ และระยะเวลาที่ใช้ก่อนจอง?
+                </span>
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 12px', color: 'var(--primary)', fontWeight: 600 }}
+                  onClick={() => setCurrentView('services')}
+                >
+                  📖 เปิดดูเมนูบริการและราคา (Service Catalog)
+                </button>
+              </div>
+            )}
             <div className="card">
               <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>ค้นหารอบเวลาตรวจของทันตแพทย์ (30 นาที)</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
