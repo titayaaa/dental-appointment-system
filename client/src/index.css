@@ -1,26 +1,45 @@
 :root {
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --primary-light: #e0f2fe;
-  --success: #16a34a;
-  --success-bg: #dcfce7;
-  --warning: #d97706;
-  --warning-bg: #fef3c7;
-  --danger: #dc2626;
-  --danger-bg: #fee2e2;
-  --bg-main: #f8fafc;
+  /* Medical Sage Green (Primary Trust & Health) */
+  --primary: #1f4e3d;
+  --primary-hover: #163a2d;
+  --primary-light: #eaf3ee;
+  --primary-border: #c2dacd;
+
+  /* Modern Blush Rose / Dusty Pink (Gen-Z Warmth & Aesthetics) */
+  --accent-pink: #d4688b;
+  --accent-pink-hover: #bd5273;
+  --pink-light: #fdf2f5;
+  --pink-border: #f8ccd9;
+  --pink-text: #a8325a;
+
+  /* Status Colors */
+  --success: #1d734e;
+  --success-bg: #ecf8f1;
+  --success-border: #a7dfc2;
+
+  --warning: #b45309;
+  --warning-bg: #fef8eb;
+  --warning-border: #fde68a;
+
+  --danger: #b91c1c;
+  --danger-bg: #fdf2f2;
+  --danger-border: #fca5a5;
+
+  /* Neutral Backgrounds & Cards */
+  --bg-main: #fbfbfa;
   --card-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
-  --radius: 12px;
+  --text-main: #18221e;
+  --text-muted: #5e6d66;
+  --border: #e6ede8;
+  --radius: 14px;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Prompt', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -31,9 +50,9 @@ body {
 
 /* Utilities */
 .container {
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 28px 20px;
 }
 
 .card {
@@ -41,7 +60,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 16px -2px rgba(31, 78, 61, 0.04);
   margin-bottom: 24px;
 }
 
@@ -50,33 +69,49 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   border: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.2px;
 }
 
 .btn-primary {
   background: var(--primary);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(31, 78, 61, 0.2);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
+  transform: translateY(-1px);
 }
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+}
+
+.btn-pink {
+  background: var(--accent-pink);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(212, 104, 139, 0.25);
+}
+.btn-pink:hover:not(:disabled) {
+  background: var(--accent-pink-hover);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: #f1f5f9;
-  color: #334155;
+  background: #f4f6f5;
+  color: #2d3b34;
+  border: 1px solid #e1e7e3;
 }
 .btn-secondary:hover {
-  background: #e2e8f0;
+  background: #e9eeeb;
+  border-color: #d1dcd5;
 }
 
 .btn-danger {
@@ -84,55 +119,59 @@ body {
   color: #fff;
 }
 .btn-danger:hover {
-  background: #b91c1c;
+  background: #991b1b;
 }
 
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 4px 12px;
   border-radius: 9999px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.1px;
 }
-.badge-available { background: var(--success-bg); color: var(--success); }
-.badge-booked { background: #f1f5f9; color: var(--text-muted); }
-.badge-pending { background: var(--warning-bg); color: var(--warning); }
-.badge-confirmed { background: var(--success-bg); color: var(--success); }
-.badge-cancelled { background: var(--danger-bg); color: var(--danger); }
+.badge-available { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+.badge-booked { background: #f2f5f3; color: var(--text-muted); border: 1px solid #e2e8e4; }
+.badge-pending { background: var(--pink-light); color: var(--pink-text); border: 1px solid var(--pink-border); }
+.badge-confirmed { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary-border); }
+.badge-cancelled { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
 
 /* Form inputs */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .form-label {
   display: block;
   margin-bottom: 6px;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--text-main);
 }
 .form-control {
   width: 100%;
   padding: 10px 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  font-size: 15px;
+  border-radius: 9px;
+  font-size: 14.5px;
   background: #fff;
-  transition: border-color 0.2s;
+  color: var(--text-main);
+  transition: all 0.2s;
 }
 .form-control:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 0 3px rgba(212, 104, 139, 0.15);
 }
 
 /* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
+  background: rgba(24, 34, 30, 0.55);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,15 +180,16 @@ body {
 }
 .modal-content {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 18px;
   max-width: 500px;
   width: 100%;
-  padding: 24px;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-  animation: modalScale 0.2s ease-out;
+  padding: 26px;
+  box-shadow: 0 25px 35px -5px rgba(24, 34, 30, 0.18);
+  animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(212, 104, 139, 0.2);
 }
 @keyframes modalScale {
-  from { transform: scale(0.95); opacity: 0; }
+  from { transform: scale(0.96); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
@@ -162,24 +202,23 @@ body {
 }
 .slot-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 11px;
   padding: 14px;
   text-align: center;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   background: #fff;
 }
 .slot-card.available {
-  border-color: #86efac;
-  background: #f0fdf4;
+  border-color: var(--success-border);
+  background: #fbfdfc;
 }
 .slot-card.available:hover {
-  border-color: var(--success);
+  border-color: var(--accent-pink);
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 6px 12px -2px rgba(212, 104, 139, 0.12);
 }
 .slot-card.booked {
-  background: #f8fafc;
-  opacity: 0.6;
-  border-color: #e2e8f0;
+  background: #f7f9f8;
+  opacity: 0.65;
+  border-color: #e4ebe6;
 }
-
