@@ -1,0 +1,103 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+}
+
+enum ScheduleStatus {
+  ACTIVE
+  CANCELLED
+}
+
+enum SlotStatus {
+  AVAILABLE
+  BOOKED
+  BLOCKED
+}
+
+enum AppointmentStatus {
+  PENDING_REVIEW
+  CONFIRMED
+  CANCELLED_CONFLICT
+  CANCELLED_BY_CUSTOMER
+  COMPLETED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  fullName     String        @map("full_name")
+  phoneNumber  String?       @map("phone_number")
+  role         Role          @default(CUSTOMER)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  appointments Appointment[]
+
+  @@map("users")
+}
+
+model Dentist {
+  id           String            @id @default(uuid())
+  name         String
+  specialty    String            // เช่น "ทันตกรรมทั่วไป", "จัดฟัน", "รักษารากฟัน"
+  isActive     Boolean           @default(true) @map("is_active")
+  schedules    DentistSchedule[]
+  appointments Appointment[]
+
+  @@map("dentists")
+}
+
+model DentistSchedule {
+  id        String         @id @default(uuid())
+  dentistId String         @map("dentist_id")
+  dentist   Dentist        @relation(fields: [dentistId], references: [id], onDelete: Cascade)
+  workDate  DateTime       @map("work_date")
+  startTime DateTime       @map("start_time")
+  endTime   DateTime       @map("end_time")
+  status    ScheduleStatus @default(ACTIVE)
+  slots     TimeSlot[]
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@map("dentist_schedules")
+}
+
+model TimeSlot {
+  id          String           @id @default(uuid())
+  scheduleId  String           @map("schedule_id")
+  schedule    DentistSchedule  @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  slotStart   DateTime         @map("slot_start")
+  slotEnd     DateTime         @map("slot_end")
+  status      SlotStatus       @default(AVAILABLE)
+  appointment Appointment?
+
+  @@map("time_slots")
+}
+
+model Appointment {
+  id              String            @id @default(uuid())
+  appointmentCode String            @unique @map("appointment_code") // เช่น "APT-2026-001"
+  customerId      String            @map("customer_id")
+  customer        User              @relation(fields: [customerId], references: [id])
+  dentistId       String            @map("dentist_id")
+  dentist         Dentist           @relation(fields: [dentistId], references: [id])
+  timeSlotId      String            @unique @map("time_slot_id") // DB Constraint: ป้องกันจอง Slot เดียวกันซ้ำเด็ดขาด
+  timeSlot        TimeSlot          @relation(fields: [timeSlotId], references: [id], onDelete: Restrict)
+  serviceType     String            @map("service_type") // "ขูดหินปูน", "อุดฟัน", "ตรวจฟันประจำปี"
+  reasonForVisit  String?           @map("reason_for_visit")
+  status          AppointmentStatus @default(PENDING_REVIEW)
+  staffNotes      String?           @map("staff_notes")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  @@map("appointments")
+}
+
