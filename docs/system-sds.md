@@ -69,7 +69,49 @@ erDiagram
     }
 ```
 
-### 3. Role & Permission Matrix
+### 3. Database Setup, Migrations & Seed Procedure
+* **Setup & Migration Commands:**
+  ```bash
+  # Initialize schema and apply initial migration
+  npx prisma migrate dev --name init_smile_sync_schema
+  
+  # Generate Prisma Client
+  npx prisma generate
+  
+  # Seed synthetic accounts and dentists
+  npx prisma db seed
+  ```
+* **Seed Accounts & Fixtures:**
+  - Staff: `staff@clinic.com` (Hash of `password123`, Role: `STAFF`)
+  - Customer 1: `customer1@test.com` (Hash of `password123`, Role: `CUSTOMER`)
+  - Customer 2: `customer2@test.com` (Hash of `password123`, Role: `CUSTOMER`)
+  - Dentists: Dr. Somchai (General Dentistry), Dr. Suda (Orthodontics) with 30-minute availability slots.
+
+### 4. Credential Handling, Session & Logout Design
+* **Password Security:** Passwords hashed with `bcryptjs` using 10 salt rounds prior to storage. Plaintext passwords never logged or returned.
+* **Token Issuance:** Upon successful verification at `POST /api/auth/login`, an HMAC-SHA256 JWT is issued containing `{ id, email, role }` with a 24-hour expiration (`exp: 24h`).
+* **Session Enforcement:** Secured endpoints extract token from `Authorization: Bearer <token>`. `requireAuth` validates token integrity and attaches `req.user`. `requireRole` checks role permissions.
+* **Logout Behavior:** Handled client-side by invalidating and removing the stored token from `localStorage`/`sessionStorage` and redirecting to `/login`.
+
+### 5. Configuration & Environment Variables
+Every setting is externalized into environment variables; no real credentials are committed to Git:
+
+| Variable Name | Purpose | Example / Default Value | Secret? |
+| :--- | :--- | :--- | :---: |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/smilesync` | Yes |
+| `JWT_SECRET` | Secret key for signing/verifying JWTs | `smilesync-dev-secret-key-change-in-prod` | Yes |
+| `PORT` | API server listen port | `3000` | No |
+| `NODE_ENV` | Runtime environment | `development` / `production` | No |
+| `CLIENT_URL` | Allowed CORS origin for frontend | `http://localhost:5173` | No |
+
+### 6. Planned GCP Cloud Deployment Components (Lab 5 Alignment)
+* **Compute:** Containerized full-stack application deployed on **Google Cloud Run** with min instances = 0 (scales to zero to eliminate idle billing).
+* **Persistence:** **Cloud SQL for PostgreSQL** (Enterprise edition, `db-f1-micro` tier, single-zone, storage auto-increase disabled for cost control).
+* **Image Registry:** **Artifact Registry** storing multi-stage Docker images tagged by full Git commit SHA.
+* **Secret Management:** Runtime secrets (`DATABASE_URL`, `JWT_SECRET`) managed via **Google Secret Manager** and injected into Cloud Run container environment securely.
+* **CI/CD Pipeline:** **GitHub Actions** connecting to GCP via **Workload Identity Federation (WIF)** without persistent JSON key files.
+
+### 7. Role & Permission Matrix
 
 | Operation / Endpoint | Public | CUSTOMER | STAFF |
 | :--- | :---: | :---: | :---: |
@@ -85,7 +127,7 @@ erDiagram
 | `GET /api/admin/appointments` | No | No | **Yes (All)** |
 | `PATCH /api/admin/appointments/:id/status` | No | No | **Yes** |
 
-### 4. API Response Conventions & Error Codes
+### 8. API Response Conventions & Error Codes
 * Standard Success Envelope:
   ```json
   { "success": true, "data": { ... } }

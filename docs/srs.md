@@ -52,3 +52,12 @@
 * **NFR-01 (Security & Authorization):** Unauthenticated requests to protected resources must return HTTP 401. Unauthorized role access must return HTTP 403 without leaking entity metadata.
 * **NFR-02 (Concurrency & Data Consistency):** Concurrent booking requests for the last available slot must guarantee exactly one successful reservation via database transaction and unique constraints.
 * **NFR-03 (Response Time):** API response times for slot availability and booking requests shall be under 500ms under standard local execution.
+
+### 7. Assumptions, Design Decisions, and Questions & Resolutions
+* **Assumption 1 (Fixed Operatory Slots):** Standard dental procedures are planned around discrete 30-minute blocks, allowing staff to schedule predictable consultation rounds.
+* **Assumption 2 (In-Person Payment):** Medical insurance verification and payment settling occur on-site upon patient arrival; online transaction gateways are purposefully omitted to reduce complexity and avoid mock financial charges.
+* **Decision 1 (Stateless JWT over Stateful Session Tables):** Chose JSON Web Tokens stored in client-side headers with 24-hour expiration. This simplifies backend scaling on Cloud Run without needing session store synchronization across container instances.
+* **Decision 2 (Database-Level Concurrency Constraint):** Placed a `UNIQUE` constraint on `Appointment.timeSlotId` alongside Prisma atomic transactions. Even if two concurrent HTTP requests pass the application-level check simultaneously, the PostgreSQL unique index guarantees exactly one reservation succeeds while the second fails gracefully with HTTP 409.
+* **Decision 3 (Explicit Cancellation State Transitions):** Rather than deleting appointment records, cancellations transition the status to `CANCELLED_BY_CUSTOMER` or `CANCELLED_CONFLICT` while releasing the `TimeSlot.status` back to `AVAILABLE`. This maintains a full audit log for clinic reporting.
+* **Question & Resolution 1:** *Should patients be allowed to book unlimited appointments across multiple dates?*  
+  **Resolution:** Implemented BR-03 limiting active uncompleted bookings to 2 per patient to prevent booking hoarding and ensure equitable access to specialist slots.

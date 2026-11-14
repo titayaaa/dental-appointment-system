@@ -18,3 +18,4 @@
 | **NFR-01** | Protect unauthenticated & unauthorized access | F-01 | Sprint 1 | AC-01 / TEST-SEC-03 (401 Unauthorized) |
 | **NFR-02** | Guarantee atomic slot booking under concurrency | F-02 | Sprint 1 | AC-02 / TEST-CONC-01 |
 | **NFR-03** | Maintain responsive API execution (< 500ms) | All | Sprint 1 | TEST-PERF-01 |
+
