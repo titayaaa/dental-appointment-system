@@ -141,8 +141,7 @@ const SERVICES = DENTAL_SERVICES_CATALOG.map((s) => s.name);
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments'>('booking');
-  const [selectedClinic, setSelectedClinic] = useState<ClinicBrand>(CLINIC_OPTIONS[0]);
-  const [showClinicSelector, setShowClinicSelector] = useState(false);
+  const selectedClinic = CLINIC_OPTIONS[0];
 
   // Catalog filters
   const [catalogCategory, setCatalogCategory] = useState<string>('ทั้งหมด');
@@ -456,27 +455,8 @@ export default function App() {
               {selectedClinic.shortName}
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
-                  {selectedClinic.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowClinicSelector(!showClinicSelector)}
-                  style={{
-                    background: 'var(--pink-light)',
-                    color: 'var(--pink-text)',
-                    border: '1px solid var(--pink-border)',
-                    borderRadius: '6px',
-                    fontSize: '11px',
-                    padding: '2px 7px',
-                    cursor: 'pointer',
-                    fontWeight: 500
-                  }}
-                  title="เปลี่ยนชื่อคลินิก"
-                >
-                  เลือกชื่อคลินิก
-                </button>
+              <div style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+                {selectedClinic.name}
               </div>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 {selectedClinic.tagline}
@@ -497,42 +477,6 @@ export default function App() {
             </button>
           </div>
         </div>
-
-        {/* Clinic Name Switcher Dropdown */}
-        {showClinicSelector && (
-          <div style={{
-            maxWidth: '1120px',
-            margin: '12px auto 0',
-            padding: '14px 18px',
-            background: 'var(--pink-light)',
-            border: '1px solid var(--pink-border)',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '10px'
-          }}>
-            <div style={{ fontSize: '13px', color: 'var(--pink-text)', fontWeight: 600 }}>
-              เลือกชื่อคลินิกที่ต้องการใช้งาน:
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {CLINIC_OPTIONS.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedClinic(c);
-                    setShowClinicSelector(false);
-                  }}
-                  className={`btn ${selectedClinic.id === c.id ? 'btn-pink' : 'btn-secondary'}`}
-                  style={{ fontSize: '12px', padding: '5px 12px' }}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Main Container */}
