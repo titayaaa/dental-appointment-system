@@ -305,6 +305,26 @@ export const I18N = {
     statusPending: 'รอยืนยันจากคลินิก',
     statusConflict: 'ยกเลิกเนื่องจากเวลาชนกัน',
     statusCancelledCust: 'ยกเลิกโดยคนไข้',
+    // Staff Service Management & Calendar
+    managePricingBtn: '⚙️ จัดการราคาและข้อมูล',
+    addProcedureBtn: '+ เพิ่มหัตถการใหม่',
+    editServiceModalTitle: 'จัดการข้อมูลและอัตราค่ารักษาทันตกรรม',
+    addServiceModalTitle: 'เพิ่มรายการหัตถการทันตกรรมใหม่',
+    saveServiceBtn: 'บันทึกข้อมูลหัตถการ',
+    deleteServiceBtn: 'ลบหัตถการนี้',
+    procNameThLabel: 'ชื่อบริการ (ภาษาไทย) *',
+    procNameEnLabel: 'ชื่อบริการ (ภาษาอังกฤษ)',
+    procCategoryLabel: 'หมวดหมู่การรักษา',
+    procPriceThLabel: 'อัตราค่าบริการประเมิน (ภาษาไทย เช่น 800 - 1,200 บาท) *',
+    procPriceEnLabel: 'อัตราค่าบริการประเมิน (ภาษาอังกฤษ เช่น 800 - 1,200 THB)',
+    procDurationLabel: 'ระยะเวลาตรวจประเมิน (นาที) *',
+    procDescThLabel: 'คำอธิบายหัตถการ (ภาษาไทย)',
+    procDescEnLabel: 'คำอธิบายหัตถการ (ภาษาอังกฤษ)',
+    calendarViewTab: '📅 ปฏิทินเวรคลินิก (Calendar)',
+    listViewTab: '📋 รายการตารางเวร (List)',
+    dutyTimelineTitle: 'ตารางเวลาปฏิบัติงานและช่วงเวลาตรวจ 30 นาทีประจำวัน',
+    noShiftsOnDate: 'ไม่มีตารางเวรของทันตแพทย์ในวันที่เลือก',
+    scheduleForThisDateBtn: 'จัดตารางเวรสำหรับวันนี้',
   },
   en: {
     clinicTitle: 'SmileSync Dental Clinic',
@@ -432,6 +452,26 @@ export const I18N = {
     statusPending: 'Pending Review',
     statusConflict: 'Cancelled (Schedule Conflict)',
     statusCancelledCust: 'Cancelled by Patient',
+    // Staff Service Management & Calendar
+    managePricingBtn: '⚙️ Manage Price & Info',
+    addProcedureBtn: '+ Add New Procedure',
+    editServiceModalTitle: 'Manage Procedure & Pricing Details',
+    addServiceModalTitle: 'Add New Dental Procedure',
+    saveServiceBtn: 'Save Procedure Details',
+    deleteServiceBtn: 'Delete Procedure',
+    procNameThLabel: 'Procedure Name (Thai) *',
+    procNameEnLabel: 'Procedure Name (English)',
+    procCategoryLabel: 'Treatment Category',
+    procPriceThLabel: 'Estimated Price Range (TH เช่น 800 - 1,200 บาท) *',
+    procPriceEnLabel: 'Estimated Price Range (EN เช่น 800 - 1,200 THB)',
+    procDurationLabel: 'Estimated Duration (Minutes) *',
+    procDescThLabel: 'Description (Thai)',
+    procDescEnLabel: 'Description (English)',
+    calendarViewTab: '📅 Clinic Roster Calendar',
+    listViewTab: '📋 Duty Roster List',
+    dutyTimelineTitle: 'Daily Duty Timeline & 30-min Slot Breakdown',
+    noShiftsOnDate: 'No scheduled shifts for this selected date.',
+    scheduleForThisDateBtn: 'Create Shift for This Date',
   },
 };
 
@@ -506,6 +546,100 @@ export default function App() {
   const [catalogSearch, setCatalogSearch] = useState<string>('');
   const [selectedServiceNotice, setSelectedServiceNotice] = useState<string | null>(null);
 
+  // Dynamic Service Catalog management for Staff
+  const [services, setServices] = useState<DentalProcedure[]>(DENTAL_SERVICES_CATALOG);
+  const [editingProcedure, setEditingProcedure] = useState<DentalProcedure | null>(null);
+  const [isAddingProcedure, setIsAddingProcedure] = useState<boolean>(false);
+  const [procFormName, setProcFormName] = useState('');
+  const [procFormNameEn, setProcFormNameEn] = useState('');
+  const [procFormCat, setProcFormCat] = useState('ทันตกรรมทั่วไป');
+  const [procFormCatEn, setProcFormCatEn] = useState('General Dentistry');
+  const [procFormPrice, setProcFormPrice] = useState('');
+  const [procFormPriceEn, setProcFormPriceEn] = useState('');
+  const [procFormDuration, setProcFormDuration] = useState(30);
+  const [procFormDesc, setProcFormDesc] = useState('');
+  const [procFormDescEn, setProcFormDescEn] = useState('');
+  const [procFormDentist, setProcFormDentist] = useState(DEFAULT_DENTISTS[0].id);
+
+  // Planner View Mode (Calendar vs List)
+  const [plannerViewMode, setPlannerViewMode] = useState<'calendar' | 'list'>('calendar');
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const [calendarSelectedDate, setCalendarSelectedDate] = useState<string>(tomorrowStr);
+
+  const handleOpenEditProcedure = (proc: DentalProcedure) => {
+    setEditingProcedure(proc);
+    setIsAddingProcedure(false);
+    setProcFormName(proc.name);
+    setProcFormNameEn(proc.nameEn);
+    setProcFormCat(proc.category);
+    setProcFormCatEn(proc.categoryEn);
+    setProcFormPrice(proc.priceRange);
+    setProcFormPriceEn(proc.priceRangeEn);
+    setProcFormDuration(proc.durationMinutes);
+    setProcFormDesc(proc.description);
+    setProcFormDescEn(proc.descriptionEn);
+    setProcFormDentist(proc.recommendedDentistId);
+  };
+
+  const handleOpenAddProcedure = () => {
+    setEditingProcedure(null);
+    setIsAddingProcedure(true);
+    setProcFormName('');
+    setProcFormNameEn('');
+    setProcFormCat('ทันตกรรมทั่วไป');
+    setProcFormCatEn('General Dentistry');
+    setProcFormPrice('1,000 - 2,000 บาท');
+    setProcFormPriceEn('1,000 - 2,000 THB');
+    setProcFormDuration(30);
+    setProcFormDesc('');
+    setProcFormDescEn('');
+    setProcFormDentist(DEFAULT_DENTISTS[0].id);
+  };
+
+  const handleSaveProcedure = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!procFormName.trim()) return;
+
+    if (isAddingProcedure) {
+      const newProc: DentalProcedure = {
+        id: `proc-${Date.now()}`,
+        code: `PR-${Math.floor(Math.random() * 89) + 10}`,
+        name: procFormName,
+        nameEn: procFormNameEn || procFormName,
+        category: procFormCat,
+        categoryEn: procFormCatEn || procFormCat,
+        priceRange: procFormPrice,
+        priceRangeEn: procFormPriceEn || procFormPrice,
+        durationMinutes: Number(procFormDuration) || 30,
+        description: procFormDesc || 'ตรวจรักษาและดูแลสุขภาพช่องปากโดยทันตแพทย์ผู้เชี่ยวชาญ',
+        descriptionEn: procFormDescEn || 'Specialized dental treatment with certified clinical care.',
+        recommendedDentistId: procFormDentist,
+      };
+      setServices(prev => [newProc, ...prev]);
+    } else if (editingProcedure) {
+      setServices(prev => prev.map(p => p.id === editingProcedure.id ? {
+        ...p,
+        name: procFormName,
+        nameEn: procFormNameEn || p.nameEn,
+        category: procFormCat,
+        categoryEn: procFormCatEn || p.categoryEn,
+        priceRange: procFormPrice,
+        priceRangeEn: procFormPriceEn || p.priceRangeEn,
+        durationMinutes: Number(procFormDuration) || p.durationMinutes,
+        description: procFormDesc,
+        descriptionEn: procFormDescEn || p.descriptionEn,
+        recommendedDentistId: procFormDentist,
+      } : p));
+    }
+    setEditingProcedure(null);
+    setIsAddingProcedure(false);
+  };
+
+  const handleDeleteProcedure = (procId: string) => {
+    setServices(prev => prev.filter(p => p.id !== procId));
+    setEditingProcedure(null);
+  };
+
   // Sync category on language switch
   useEffect(() => {
     setCatalogCategory(lang === 'th' ? 'ทั้งหมด' : 'All');
@@ -520,7 +654,6 @@ export default function App() {
   // Booking state
   const [dentists, setDentists] = useState<DentistInfo[]>(DEFAULT_DENTISTS);
   const [selectedDentist, setSelectedDentist] = useState(DEFAULT_DENTISTS[0].id);
-  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(tomorrowStr);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
@@ -1031,7 +1164,7 @@ export default function App() {
     ? ['ทั้งหมด', 'ทันตกรรมทั่วไป', 'ทันตกรรมเฉพาะทาง', 'ทันตกรรมเพื่อความงาม', 'ตรวจรักษาเฉพาะบุคคล']
     : ['All', 'General Dentistry', 'Specialized Care', 'Cosmetic Dentistry', 'Custom Consultation'];
 
-  const filteredProcedures = DENTAL_SERVICES_CATALOG.filter((p) => {
+  const filteredProcedures = services.filter((p) => {
     const pCat = lang === 'th' ? p.category : p.categoryEn;
     const pName = lang === 'th' ? p.name : p.nameEn;
     const pDesc = lang === 'th' ? p.description : p.descriptionEn;
@@ -1336,12 +1469,24 @@ export default function App() {
                     {t.catalogSub}
                   </p>
                 </div>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => setCurrentView('booking')}
-                >
-                  {t.tabBooking}
-                </button>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  {currentUser?.role === 'STAFF' && (
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      style={{ fontSize: '13px', padding: '8px 16px', background: 'var(--primary)', borderColor: 'var(--primary)' }}
+                      onClick={handleOpenAddProcedure}
+                    >
+                      {t.addProcedureBtn}
+                    </button>
+                  )}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setCurrentView('booking')}
+                  >
+                    {t.tabBooking}
+                  </button>
+                </div>
               </div>
 
               {/* Filter Categories & Search Bar */}
@@ -1427,13 +1572,32 @@ export default function App() {
                         </div>
                       </div>
 
-                      <button
-                        className="btn btn-primary"
-                        style={{ width: '100%', fontSize: '13.5px', padding: '9px 14px' }}
-                        onClick={() => handleSelectProcedure(proc)}
-                      >
-                        {t.bookThisService}
-                      </button>
+                      {currentUser?.role === 'STAFF' ? (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{
+                            width: '100%',
+                            fontSize: '13px',
+                            padding: '8px 14px',
+                            border: '1px solid var(--primary)',
+                            color: 'var(--primary)',
+                            fontWeight: 600,
+                            background: '#f8faf9'
+                          }}
+                          onClick={() => handleOpenEditProcedure(proc)}
+                        >
+                          {t.managePricingBtn}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-primary"
+                          style={{ width: '100%', fontSize: '13.5px', padding: '9px 14px' }}
+                          onClick={() => handleSelectProcedure(proc)}
+                        >
+                          {t.bookThisService}
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -2017,39 +2181,224 @@ export default function App() {
                 </button>
               </form>
 
-              <h3 style={{ fontSize: '15.5px', fontWeight: 600, marginBottom: '14px' }}>{t.existingRostersTitle}</h3>
+              {/* Roster View Switcher: Calendar View vs List View */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>
+                  {plannerViewMode === 'calendar' ? t.calendarViewTab : t.listViewTab}
+                </h3>
+                <div style={{ display: 'flex', gap: '8px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
+                  <button
+                    type="button"
+                    className={`btn ${plannerViewMode === 'calendar' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '7px' }}
+                    onClick={() => setPlannerViewMode('calendar')}
+                  >
+                    {t.calendarViewTab}
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${plannerViewMode === 'list' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: '12px', padding: '6px 14px', borderRadius: '7px' }}
+                    onClick={() => setPlannerViewMode('list')}
+                  >
+                    {t.listViewTab}
+                  </button>
+                </div>
+              </div>
+
               {loadingAdminSchedules ? (
                 <div style={{ textAlign: 'center', padding: '30px' }}>{t.loadingRosters}</div>
-              ) : adminSchedules.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>{t.noRosters}</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {adminSchedules.map((s) => (
-                    <div
-                      key={s.id}
-                      style={{
-                        border: '1px solid var(--border)',
-                        borderRadius: '10px',
-                        padding: '14px 18px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        gap: '10px',
-                        background: '#fff'
-                      }}
-                    >
-                      <div>
-                        <strong>{s.dentist?.name}</strong> ({s.dentist?.specialty})
-                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          {t.workDateLabel}: {new Date(s.workDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'medium' })} | {t.slotTimeLabel}: {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              ) : plannerViewMode === 'calendar' ? (
+                /* CALENDAR STRIP & DAILY TIMELINE MATRIX */
+                <div>
+                  {/* 7-Day Calendar Strip */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                    {Array.from({ length: 7 }, (_, i) => {
+                      const d = new Date(Date.now() + i * 86400000);
+                      const dStr = d.toISOString().split('T')[0];
+                      const dayName = d.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { weekday: 'short' });
+                      const dayNum = d.toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short' });
+                      const daySchedules = adminSchedules.filter(s => {
+                        const sDate = (s.workDate || '').split('T')[0];
+                        return sDate === dStr;
+                      });
+                      const isSelected = calendarSelectedDate === dStr;
+
+                      return (
+                        <div
+                          key={dStr}
+                          onClick={() => {
+                            setCalendarSelectedDate(dStr);
+                            setScheduleDate(dStr);
+                          }}
+                          style={{
+                            padding: '14px 10px',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                            background: isSelected ? '#f0fdf4' : '#fff',
+                            boxShadow: isSelected ? '0 4px 12px rgba(31,78,61,0.1)' : 'none',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: isSelected ? 'var(--primary)' : 'var(--text-muted)', textTransform: 'uppercase' }}>
+                            {dayName}
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 700, margin: '4px 0', color: isSelected ? 'var(--primary)' : 'var(--text-main)' }}>
+                            {dayNum}
+                          </div>
+                          <span
+                            className="badge"
+                            style={{
+                              fontSize: '11px',
+                              padding: '2px 8px',
+                              background: daySchedules.length > 0 ? (isSelected ? 'var(--primary)' : 'var(--success-bg)') : '#f1f5f9',
+                              color: daySchedules.length > 0 ? (isSelected ? '#fff' : 'var(--success)') : 'var(--text-muted)',
+                            }}
+                          >
+                            {daySchedules.length > 0
+                              ? `${daySchedules.length} ${lang === 'th' ? 'เวรตรวจ' : 'shifts'}`
+                              : (lang === 'th' ? 'ไม่มีเวร' : 'Off')}
+                          </span>
                         </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Daily Duty Timeline for Selected Date */}
+                  <div style={{ background: '#f8faf9', border: '1px solid #e7eee9', borderRadius: '12px', padding: '18px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                      <div>
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
+                          {t.dutyTimelineTitle} ({new Date(calendarSelectedDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'full' })})
+                        </h4>
                       </div>
-                      <span className="badge badge-available">
-                        {s.slots ? s.slots.length : 0} {t.slotCountSuffix}
-                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ fontSize: '12px', padding: '5px 12px', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                        onClick={() => {
+                          setScheduleDate(calendarSelectedDate);
+                          window.scrollTo({ top: 400, behavior: 'smooth' });
+                        }}
+                      >
+                        + {t.scheduleForThisDateBtn}
+                      </button>
                     </div>
-                  ))}
+
+                    {adminSchedules.filter(s => (s.workDate || '').split('T')[0] === calendarSelectedDate).length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
+                        <div style={{ fontSize: '24px', marginBottom: '8px' }}>🗓️</div>
+                        <p style={{ margin: 0, fontSize: '13.5px' }}>{t.noShiftsOnDate}</p>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {adminSchedules
+                          .filter(s => (s.workDate || '').split('T')[0] === calendarSelectedDate)
+                          .map((s) => {
+                            const dentistObj = dentists.find(d => d.id === s.dentistId) || s.dentist;
+                            const dName = lang === 'th' ? dentistObj?.name : dentistObj?.nameEn;
+                            const dSpec = lang === 'th' ? dentistObj?.specialty : dentistObj?.specialtyEn;
+
+                            return (
+                              <div
+                                key={s.id}
+                                style={{
+                                  background: '#fff',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '10px',
+                                  padding: '16px',
+                                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--pink-light)', color: 'var(--pink-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
+                                      🩺
+                                    </div>
+                                    <div>
+                                      <strong style={{ fontSize: '14.5px', color: 'var(--text-main)' }}>{dName}</strong>
+                                      <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dSpec}</div>
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                      ⏰ {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    <span className="badge badge-available">
+                                      {s.slots ? s.slots.length : 0} {t.slotCountSuffix}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Slot Chips Matrix */}
+                                {s.slots && s.slots.length > 0 && (
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' }}>
+                                    {s.slots.map((slot: TimeSlot) => {
+                                      const isAvail = slot.status === 'AVAILABLE';
+                                      const tS = new Date(slot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                      const tE = new Date(slot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                      return (
+                                        <span
+                                          key={slot.id}
+                                          style={{
+                                            fontSize: '11px',
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            background: isAvail ? '#f0fdf4' : '#f1f5f9',
+                                            color: isAvail ? '#166534' : '#64748b',
+                                            border: isAvail ? '1px solid #bbf7d0' : '1px solid #cbd5e1',
+                                            fontWeight: 500,
+                                          }}
+                                        >
+                                          {tS} - {tE} {isAvail ? '✓' : '●'}
+                                        </span>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* LIST VIEW OF ROSTERS */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {adminSchedules.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>{t.noRosters}</div>
+                  ) : (
+                    adminSchedules.map((s) => (
+                      <div
+                        key={s.id}
+                        style={{
+                          border: '1px solid var(--border)',
+                          borderRadius: '10px',
+                          padding: '14px 18px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '10px',
+                          background: '#fff'
+                        }}
+                      >
+                        <div>
+                          <strong>{s.dentist?.name}</strong> ({s.dentist?.specialty})
+                          <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {t.workDateLabel}: {new Date(s.workDate).toLocaleDateString(lang === 'th' ? 'th-TH' : 'en-US', { dateStyle: 'medium' })} | {t.slotTimeLabel}: {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                        <span className="badge badge-available">
+                          {s.slots ? s.slots.length : 0} {t.slotCountSuffix}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>
@@ -2079,7 +2428,7 @@ export default function App() {
                   value={serviceType}
                   onChange={(e) => setServiceType(e.target.value)}
                 >
-                  {DENTAL_SERVICES_CATALOG.map((srv) => (
+                  {services.map((srv) => (
                     <option key={srv.id} value={lang === 'th' ? srv.name : srv.nameEn}>
                       {lang === 'th' ? srv.name : srv.nameEn} ({lang === 'th' ? srv.priceRange : srv.priceRangeEn})
                     </option>
@@ -2184,6 +2533,175 @@ export default function App() {
                   {updatingStatusId === rejectModalApt.id ? t.savingReject : t.confirmRejectAction}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* STAFF PROCEDURE MODAL (Add / Edit Price & Info) */}
+        {(editingProcedure || isAddingProcedure) && (
+          <div className="modal-overlay">
+            <div className="modal-content" style={{ maxWidth: '580px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
+                  {isAddingProcedure ? t.addServiceModalTitle : t.editServiceModalTitle}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => { setEditingProcedure(null); setIsAddingProcedure(false); }}
+                  style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--text-muted)' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveProcedure}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procNameThLabel}</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={procFormName}
+                      onChange={(e) => setProcFormName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procNameEnLabel}</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={procFormNameEn}
+                      onChange={(e) => setProcFormNameEn(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procCategoryLabel}</label>
+                    <select
+                      className="form-control"
+                      value={procFormCat}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setProcFormCat(val);
+                        if (val === 'ทันตกรรมทั่วไป') setProcFormCatEn('General Dentistry');
+                        else if (val === 'ทันตกรรมเฉพาะทาง') setProcFormCatEn('Specialized Care');
+                        else if (val === 'ทันตกรรมเพื่อความงาม') setProcFormCatEn('Cosmetic Dentistry');
+                        else setProcFormCatEn('Custom Consultation');
+                      }}
+                    >
+                      <option value="ทันตกรรมทั่วไป">ทันตกรรมทั่วไป (General Dentistry)</option>
+                      <option value="ทันตกรรมเฉพาะทาง">ทันตกรรมเฉพาะทาง (Specialized Care)</option>
+                      <option value="ทันตกรรมเพื่อความงาม">ทันตกรรมเพื่อความงาม (Cosmetic Dentistry)</option>
+                      <option value="ตรวจรักษาเฉพาะบุคคล">ตรวจรักษาเฉพาะบุคคล (Custom Consultation)</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.doctorLabel}</label>
+                    <select
+                      className="form-control"
+                      value={procFormDentist}
+                      onChange={(e) => setProcFormDentist(e.target.value)}
+                    >
+                      {dentists.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {lang === 'th' ? d.name : d.nameEn}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: '12px' }}>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procPriceThLabel}</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={procFormPrice}
+                      onChange={(e) => setProcFormPrice(e.target.value)}
+                      placeholder="เช่น 800 - 1,200 บาท"
+                      required
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procPriceEnLabel}</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={procFormPriceEn}
+                      onChange={(e) => setProcFormPriceEn(e.target.value)}
+                      placeholder="e.g. 800 - 1,200 THB"
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '12px' }}>
+                    <label className="form-label">{t.procDurationLabel}</label>
+                    <input
+                      type="number"
+                      min={15}
+                      step={15}
+                      className="form-control"
+                      value={procFormDuration}
+                      onChange={(e) => setProcFormDuration(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '14px' }}>
+                  <label className="form-label">{t.procDescThLabel}</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    value={procFormDesc}
+                    onChange={(e) => setProcFormDesc(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '18px' }}>
+                  <label className="form-label">{t.procDescEnLabel}</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    value={procFormDescEn}
+                    onChange={(e) => setProcFormDescEn(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center' }}>
+                  {editingProcedure ? (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ color: 'var(--danger)', borderColor: 'var(--danger-border)', background: 'var(--danger-bg)', fontSize: '13px' }}
+                      onClick={() => {
+                        if (window.confirm(lang === 'th' ? 'ต้องการลบหัตถการนี้ใช่หรือไม่?' : 'Delete this procedure?')) {
+                          handleDeleteProcedure(editingProcedure.id);
+                        }
+                      }}
+                    >
+                      {t.deleteServiceBtn}
+                    </button>
+                  ) : <div />}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => { setEditingProcedure(null); setIsAddingProcedure(false); }}
+                    >
+                      {t.modalCancelBtn}
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                    >
+                      {t.saveServiceBtn}
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
         )}
