@@ -1303,28 +1303,39 @@ export default function App() {
   return (
     <div>
       {/* Top Navbar */}
-      <header style={{ background: '#fff', borderBottom: '1px solid var(--border)', padding: '14px 24px', position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
-        <div style={{ maxWidth: '1120px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{
+        background: 'rgba(255, 255, 255, 0.92)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(227, 237, 230, 0.85)',
+        padding: '14px 24px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        boxShadow: '0 4px 20px rgba(20, 48, 36, 0.03)'
+      }}>
+        <div style={{ maxWidth: '1140px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
+              width: '42px',
+              height: '42px',
+              borderRadius: '13px',
               background: 'linear-gradient(135deg, var(--accent-pink) 0%, var(--primary) 100%)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: '16px',
+              fontWeight: 800,
+              fontSize: '17px',
               letterSpacing: '-0.3px',
-              boxShadow: '0 2px 8px rgba(31, 78, 61, 0.15)'
+              boxShadow: '0 4px 14px rgba(23, 77, 57, 0.22)'
             }}>
               {selectedClinic.shortName}
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+              <div style={{ fontWeight: 800, fontSize: '17.5px', color: 'var(--text-main)', letterSpacing: '-0.4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {lang === 'th' ? selectedClinic.name : selectedClinic.nameEn}
+                <span style={{ fontSize: '11px', background: 'var(--pink-light)', color: 'var(--pink-text)', padding: '1px 7px', borderRadius: '6px', fontWeight: 700, border: '1px solid var(--pink-border)' }}>Studio</span>
               </div>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 {lang === 'th' ? selectedClinic.tagline : selectedClinic.taglineEn}
@@ -1335,7 +1346,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             {renderLanguageSwitcher()}
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-main)' }}>{currentUser.fullName}</div>
+              <div style={{ fontWeight: 700, fontSize: '13.5px', color: 'var(--text-main)' }}>{currentUser.fullName}</div>
               <span className={`badge ${currentUser.role === 'STAFF' ? 'badge-confirmed' : 'badge-available'}`}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }}></span>
                 {currentUser.role === 'STAFF' ? t.staffBadge : t.customerBadge}
@@ -1350,54 +1361,127 @@ export default function App() {
 
       {/* Main Container */}
       <main className="container">
-        {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        {/* Navigation Tabs - Modern Segmented Control */}
+        <div style={{
+          display: 'inline-flex',
+          background: '#ebf3ee',
+          padding: '5px',
+          borderRadius: '14px',
+          gap: '4px',
+          marginBottom: '26px',
+          border: '1px solid #d5e6dc',
+          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.03)',
+          flexWrap: 'wrap'
+        }}>
           {currentUser.role === 'STAFF' ? (
             <>
               <button
-                className={`btn ${currentView === 'staff-appointments' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'staff-appointments' ? '#fff' : 'transparent',
+                  color: currentView === 'staff-appointments' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'staff-appointments' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'staff-appointments' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'staff-appointments' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('staff-appointments')}
               >
-                {t.tabStaffDashboard}
+                📊 {t.tabStaffDashboard}
               </button>
               <button
-                className={`btn ${currentView === 'staff-schedules' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'staff-schedules' ? '#fff' : 'transparent',
+                  color: currentView === 'staff-schedules' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'staff-schedules' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'staff-schedules' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'staff-schedules' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('staff-schedules')}
               >
-                {t.tabStaffPlanner}
+                📅 {t.tabStaffPlanner}
               </button>
               <button
-                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'booking' ? '#fff' : 'transparent',
+                  color: currentView === 'booking' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'booking' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'booking' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'booking' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('booking')}
               >
-                {t.tabCustomerView}
+                👀 {t.tabCustomerView}
               </button>
               <button
-                className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'services' ? '#fff' : 'transparent',
+                  color: currentView === 'services' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'services' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'services' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'services' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('services')}
               >
-                {t.tabCatalog}
+                🦷 {t.tabCatalog}
               </button>
             </>
           ) : (
             <>
               <button
-                className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'services' ? '#fff' : 'transparent',
+                  color: currentView === 'services' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'services' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'services' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'services' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('services')}
               >
-                {t.tabCatalog}
+                🦷 {t.tabCatalog}
               </button>
               <button
-                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'booking' ? '#fff' : 'transparent',
+                  color: currentView === 'booking' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'booking' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'booking' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'booking' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('booking')}
               >
-                {t.tabBooking}
+                ✨ {t.tabBooking}
               </button>
               <button
-                className={`btn ${currentView === 'my-appointments' ? 'btn-primary' : 'btn-secondary'}`}
+                className="btn"
+                style={{
+                  background: currentView === 'my-appointments' ? '#fff' : 'transparent',
+                  color: currentView === 'my-appointments' ? 'var(--primary)' : 'var(--text-muted)',
+                  boxShadow: currentView === 'my-appointments' ? '0 2px 8px rgba(23,77,57,0.12)' : 'none',
+                  border: currentView === 'my-appointments' ? '1px solid rgba(23,77,57,0.15)' : '1px solid transparent',
+                  fontWeight: currentView === 'my-appointments' ? 700 : 500,
+                  padding: '8px 16px',
+                  borderRadius: '10px'
+                }}
                 onClick={() => setCurrentView('my-appointments')}
               >
-                {t.tabMyAppointments}
+                📋 {t.tabMyAppointments}
               </button>
             </>
           )}
@@ -1409,13 +1493,13 @@ export default function App() {
             background: 'var(--success-bg)',
             color: 'var(--success)',
             padding: '16px 20px',
-            borderRadius: '12px',
+            borderRadius: '14px',
             marginBottom: '24px',
             border: '1px solid var(--success-border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            boxShadow: '0 4px 12px rgba(29, 115, 78, 0.08)'
+            boxShadow: '0 4px 14px rgba(18, 115, 74, 0.08)'
           }}>
             <div>
               <strong>{t.successTitle}</strong> {t.successPrefix} <code style={{ fontWeight: 700, padding: '3px 8px', background: '#fff', borderRadius: '6px', border: '1px solid var(--success-border)', fontSize: '14px', marginLeft: 4 }}>{successCode}</code> <span style={{ color: 'var(--text-muted)', fontSize: '13px', marginLeft: 6 }}>{t.successStatusNote}</span>
@@ -1429,29 +1513,36 @@ export default function App() {
         {/* CUSTOMER HERO BANNER (Shown on booking and services view) */}
         {currentUser.role === 'CUSTOMER' && (currentView === 'booking' || currentView === 'services') && (
           <div style={{
-            background: 'linear-gradient(135deg, #edf5f0 0%, #fcf4f7 100%)',
-            border: '1px solid rgba(31, 78, 61, 0.08)',
-            borderRadius: '16px',
-            padding: '24px 28px',
-            marginBottom: '24px',
-            boxShadow: '0 4px 20px -2px rgba(31, 78, 61, 0.04)'
+            background: 'linear-gradient(135deg, #eef7f2 0%, #fef3f7 100%)',
+            border: '1px solid rgba(23, 77, 57, 0.1)',
+            borderRadius: '20px',
+            padding: '28px 32px',
+            marginBottom: '26px',
+            boxShadow: '0 8px 30px -4px rgba(23, 77, 57, 0.05)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--primary)', letterSpacing: '-0.3px', marginBottom: '6px' }}>
-              {t.heroTitle}
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '16px', maxWidth: '780px', lineHeight: '1.5' }}>
-              {t.heroSub}
-            </p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span className="badge" style={{ background: '#fff', color: 'var(--primary)', border: '1px solid #c8ded1', fontSize: '12px', padding: '5px 12px' }}>
-                {t.heroBadge1}
-              </span>
-              <span className="badge" style={{ background: '#fff', color: 'var(--accent-pink)', border: '1px solid #f2cfdb', fontSize: '12px', padding: '5px 12px' }}>
-                {t.heroBadge2}
-              </span>
-              <span className="badge" style={{ background: '#fff', color: 'var(--text-main)', border: '1px solid #e1e8e4', fontSize: '12px', padding: '5px 12px' }}>
-                {t.heroBadge3}
-              </span>
+            <div style={{ position: 'relative', zIndex: 2 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fff', padding: '3px 10px', borderRadius: '9999px', fontSize: '12px', fontWeight: 700, color: 'var(--primary)', border: '1px solid #cce4d6', marginBottom: '10px' }}>
+                ✨ {lang === 'th' ? 'คลินิกทันตกรรมระดับพรีเมียม' : 'Boutique Clinical Dental Care'}
+              </div>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '-0.4px', marginBottom: '8px' }}>
+                {t.heroTitle}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '18px', maxWidth: '820px', lineHeight: '1.6' }}>
+                {t.heroSub}
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span className="badge" style={{ background: '#fff', color: 'var(--primary)', border: '1px solid #c2ded0', fontSize: '12.5px', padding: '6px 14px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  {t.heroBadge1}
+                </span>
+                <span className="badge" style={{ background: '#fff', color: 'var(--accent-pink)', border: '1px solid #f2cbd7', fontSize: '12.5px', padding: '6px 14px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  {t.heroBadge2}
+                </span>
+                <span className="badge" style={{ background: '#fff', color: 'var(--text-main)', border: '1px solid #dce8e1', fontSize: '12.5px', padding: '6px 14px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  {t.heroBadge3}
+                </span>
+              </div>
             </div>
           </div>
         )}
