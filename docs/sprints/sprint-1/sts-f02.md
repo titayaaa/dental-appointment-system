@@ -19,7 +19,9 @@
 | **TEST-TDD-01** ⭐ | `AC-03` | Integration (TDD Concurrency) | Slot is already `BOOKED` (or Request 1 reserved it 1ms earlier). | Request 2 submits `POST /api/appointments` with the same `timeSlotId`. | **Rejection:** Returns **HTTP 409 Conflict** with clear error message. Zero duplicate appointments created in DB. |
 | **TEST-VAL-01** | `AC-04` | Unit / Validation | Slot has `slotStart` in the past (e.g. yesterday). | `POST /api/appointments` with past `timeSlotId`. | **Rejection:** Returns **HTTP 400 Bad Request** ("Cannot reserve slots in the past"). |
 | **TEST-VAL-02** | `AC-05` | Integration (Business Rule) | Patient already has 2 active appointments in `PENDING_REVIEW` or `CONFIRMED`. | Patient attempts `POST /api/appointments` for a 3rd booking. | **Rejection:** Returns **HTTP 403 Forbidden** ("Booking quota exceeded: maximum 2 active appointments allowed"). |
-| **TEST-UI-01** | `AC-02`, `AC-03` | E2E / Component (UI) | Render `/booking` with mock API returning 1 available slot. | 1. User selects slot, fills form, clicks submit.<br>2. Simulate 409 response. | Form shows loading indicator. On 409 response, displays a prominent error dialog alerting user that the slot was taken. |
+| **TEST-CUST-05** | `AC-06` | Integration (Data Privacy) | Patient authenticated as `CUSTOMER`. | `GET /api/my-appointments` | Returns HTTP 200 with only appointments created by the authenticated patient (`BR-04 Data Privacy`). |
+| **TEST-CUST-06** | `AC-07` | Integration (State & Lifecycle) | Patient has appointment with status `PENDING_REVIEW` or `CONFIRMED`. | `PATCH /api/my-appointments/:id/cancel` | Returns HTTP 200. Appointment status changes to `CANCELLED_BY_CUSTOMER`. Associated TimeSlot transitions back to `AVAILABLE` (`BR-06`). Rejects with 400 if already completed or cancelled. |
+| **TEST-UI-01** | `AC-02`, `AC-03` | E2E / Component (UI) | Render `/booking` with mock API returning 1 available slot. | 1. User selects slot, fills form, clicks submit.<br>2. Simulate 409 response. | Form shows loading indicator. On 409 response, displays a prominent error dialog alerting user that the slot was taken and auto-refreshes slot list. |
 
 ---
 

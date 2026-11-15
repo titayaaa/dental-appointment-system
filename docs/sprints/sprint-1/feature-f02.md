@@ -148,6 +148,34 @@ sequenceDiagram
     { "success": false, "error": "This time slot is no longer available. Please select another slot." }
     ```
 
+#### C. Query Active Dentists
+* **Endpoint:** `GET /api/dentists`
+* **Access Control:** Public or Authenticated users.
+* **Success Response (HTTP 200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "dentist-somchai",
+        "name": "ทพ.สมชาย ใจดี",
+        "specialty": "ทันตกรรมทั่วไป"
+      }
+    ]
+  }
+  ```
+
+#### D. Personal Appointment History
+* **Endpoint:** `GET /api/my-appointments`
+* **Access Control:** `CUSTOMER` role only (`BR-04 Data Privacy`).
+* **Success Response (HTTP 200 OK):** Array of appointments owned strictly by the authenticated patient.
+
+#### E. Cancel Appointment & Release Slot
+* **Endpoint:** `PATCH /api/my-appointments/:id/cancel`
+* **Access Control:** `CUSTOMER` role only. Patient can only cancel their own appointment.
+* **State Transition Guard:** Must be in `PENDING_REVIEW` or `CONFIRMED` status. Rejects with 400 if already `COMPLETED` or cancelled.
+* **Success Response (HTTP 200 OK):** Atomically transitions appointment status to `CANCELLED_BY_CUSTOMER` and releases associated `timeSlot` back to `AVAILABLE` (`BR-06`).
+
 ### 2.3 Database & Concurrency Enforcement Layer
 * **Transaction Strategy:** The booking operation is executed inside an atomic transaction:
   ```typescript

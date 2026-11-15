@@ -248,7 +248,11 @@ export async function bookAppointment(req: AuthenticatedRequest, res: Response):
       data: newAppointment,
     });
   } catch (error: any) {
-    if (error.message === 'CONCURRENCY_CONFLICT' || error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+    if (
+      error.message === 'CONCURRENCY_CONFLICT' ||
+      error.code === 'P2002' ||
+      (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')
+    ) {
       res.status(409).json({
         success: false,
         error: 'Conflict: This time slot is no longer available. Please select another slot.',
