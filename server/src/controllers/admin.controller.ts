@@ -62,6 +62,15 @@ export async function createSchedule(req: AuthenticatedRequest, res: Response): 
     const shiftEnd = new Date(dateObj);
     shiftEnd.setHours(endH, endM, 0, 0);
 
+    // Prevent creating schedules in the past
+    if (shiftStart < new Date()) {
+      res.status(400).json({
+        success: false,
+        error: 'Bad Request: Cannot create duty schedules in the past',
+      });
+      return;
+    }
+
     if (shiftEnd <= shiftStart) {
       res.status(400).json({
         success: false,
@@ -286,10 +295,14 @@ export async function updateAppointmentStatus(req: AuthenticatedRequest, res: Re
     }
 
     // State transition guard
-    if (appointment.status === AppointmentStatus.COMPLETED || appointment.status === AppointmentStatus.CANCELLED_BY_CUSTOMER) {
+    if (
+      appointment.status === AppointmentStatus.COMPLETED ||
+      appointment.status === AppointmentStatus.CANCELLED_BY_CUSTOMER ||
+      appointment.status === AppointmentStatus.CANCELLED_CONFLICT
+    ) {
       res.status(400).json({
         success: false,
-        error: 'Bad Request: Cannot alter appointment that is completed or already cancelled by customer',
+        error: 'Bad Request: Cannot alter appointment that is completed or already cancelled',
       });
       return;
     }

@@ -91,6 +91,29 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
       expect(res.body.error).toContain('Dentist does not exist');
     });
 
+    it('should reject with 400 when shiftStart is in the past', async () => {
+      vi.spyOn(prisma.dentist, 'findUnique').mockResolvedValue({
+        id: mockDentistId,
+        name: 'ทพ.สมชาย ใจดี',
+        specialty: 'ทันตกรรมทั่วไป',
+        isActive: true,
+      } as any);
+
+      const res = await request(app)
+        .post('/api/admin/schedules')
+        .set('Authorization', `Bearer ${staffToken}`)
+        .send({
+          dentistId: mockDentistId,
+          workDate: '2020-01-01',
+          startTime: '09:00',
+          endTime: '12:00',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Cannot create duty schedules in the past');
+    });
+
     it('should reject with 400 when endTime is before or equal to startTime', async () => {
       vi.spyOn(prisma.dentist, 'findUnique').mockResolvedValue({
         id: mockDentistId,
@@ -245,20 +268,34 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
       expect(res.body.error).toContain('Appointment record does not exist');
     });
 
-    it('should reject with 400 when trying to alter COMPLETED appointment', async () => {
+    it('should reject with 400 when trying to alter COMPLETED or CANCELLED_CONFLICT appointment', async () => {
       vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue({
         id: 'apt-completed',
         status: AppointmentStatus.COMPLETED,
       } as any);
 
-      const res = await request(app)
+      const res1 = await request(app)
         .patch('/api/admin/appointments/apt-completed/status')
         .set('Authorization', `Bearer ${staffToken}`)
         .send({ status: AppointmentStatus.CANCELLED_CONFLICT });
 
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toContain('Cannot alter appointment that is completed or already cancelled');
+      expect(res1.status).toBe(400);
+      expect(res1.body.success).toBe(false);
+      expect(res1.body.error).toContain('Cannot alter appointment that is completed or already cancelled');
+
+      vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue({
+        id: 'apt-conflict-cancelled',
+        status: AppointmentStatus.CANCELLED_CONFLICT,
+      } as any);
+
+      const res2 = await request(app)
+        .patch('/api/admin/appointments/apt-conflict-cancelled/status')
+        .set('Authorization', `Bearer ${staffToken}`)
+        .send({ status: AppointmentStatus.CONFIRMED });
+
+      expect(res2.status).toBe(400);
+      expect(res2.body.success).toBe(false);
+      expect(res2.body.error).toContain('Cannot alter appointment that is completed or already cancelled');
     });
 
     it('TEST-STAFF-05: should successfully transition status to CONFIRMED', async () => {

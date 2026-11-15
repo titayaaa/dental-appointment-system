@@ -144,6 +144,10 @@ stateDiagram-v2
 1. **`BR-05 (Staff RBAC Security):`** Any invocation of `/api/admin/*` by non-staff accounts (including patients with `Role.CUSTOMER`) MUST be intercepted by `requireRole([Role.STAFF])` and rejected with `HTTP 403 Forbidden`.
 2. **`BR-06 (Conflict Slot Recycle):`** When status transitions to `CANCELLED_CONFLICT`, the database transaction MUST atomically update `Appointment.status = CANCELLED_CONFLICT` AND `TimeSlot.status = AVAILABLE`.
 
+### 3.1 Architecture Note & Sprint 2 Evolution (Unique Constraint on Slot Recycle)
+* **Current Sprint 1 Architecture:** In the current schema, `Appointment.timeSlotId` enforces `@unique @map("time_slot_id")` at the engine level to definitively eliminate concurrent double-booking. When a slot is recycled back to `AVAILABLE` upon `CANCELLED_CONFLICT`, the slot becomes bookable again.
+* **Sprint 2 Roadmap:** To support full historical audit trails if a single slot is booked and cancelled multiple times across the clinic history, the schema will be evolved from an unconditional `@unique` constraint to a PostgreSQL partial unique index: `CREATE UNIQUE INDEX active_slot_idx ON appointments (time_slot_id) WHERE status IN ('PENDING_REVIEW', 'CONFIRMED');` or generate regenerated slot records.
+
 ---
 
 ## 4. Definition of Done (DoD) for F-03

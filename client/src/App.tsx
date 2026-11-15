@@ -621,19 +621,19 @@ export default function App() {
                 className={`btn ${currentView === 'staff-appointments' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('staff-appointments')}
               >
-                📋 จัดการนัดหมายทั้งหมด (Staff Dashboard)
+                จัดการนัดหมายทั้งหมด (Staff Dashboard)
               </button>
               <button
                 className={`btn ${currentView === 'staff-schedules' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('staff-schedules')}
               >
-                🗓️ วางแผนตารางเวรหมอ (Schedule Planner)
+                วางแผนตารางเวรหมอ (Schedule Planner)
               </button>
               <button
                 className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('booking')}
               >
-                👀 มุมมองจองคิวคนไข้ (Customer Booking)
+                มุมมองจองคิวคนไข้ (Customer Booking)
               </button>
               <button
                 className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
@@ -1048,7 +1048,7 @@ export default function App() {
                   style={{ fontSize: '12.5px', padding: '6px 14px' }}
                   onClick={() => loadAdminAppointments()}
                 >
-                  🔄 รีเฟรชข้อมูล
+                  รีเฟรชข้อมูล
                 </button>
               </div>
 
@@ -1141,7 +1141,7 @@ export default function App() {
                                   onClick={() => handleConfirmAppointment(apt.id)}
                                   disabled={updatingStatusId === apt.id}
                                 >
-                                  {updatingStatusId === apt.id ? 'กำลังบันทึก...' : '✓ ยืนยันนัดหมาย'}
+                                  {updatingStatusId === apt.id ? 'กำลังบันทึก...' : 'ยืนยันนัดหมาย'}
                                 </button>
                               )}
                               <button
@@ -1153,7 +1153,7 @@ export default function App() {
                                 }}
                                 disabled={updatingStatusId === apt.id}
                               >
-                                ✕ ปฏิเสธ (เวลาชนกัน)
+                                ปฏิเสธ (เวลาชนกัน)
                               </button>
                             </div>
                           )}
@@ -1241,7 +1241,7 @@ export default function App() {
                   style={{ marginTop: '16px' }}
                   disabled={submittingSchedule}
                 >
-                  {submittingSchedule ? 'กำลังสร้างรอบตรวจ...' : '🗓️ สร้างตารางเวรและแตกสร้างรอบเวลา 30 นาที'}
+                  {submittingSchedule ? 'กำลังสร้างรอบตรวจ...' : 'สร้างตารางเวรและแตกสร้างรอบเวลา 30 นาที'}
                 </button>
               </form>
 
