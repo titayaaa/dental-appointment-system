@@ -276,6 +276,11 @@ export const I18N = {
     confirmBtn: 'ยืนยันนัดหมาย',
     rejectConflictBtn: 'ปฏิเสธ (เวลาชนกัน)',
     noAdminAppts: 'ไม่พบนัดหมายในหมวดหมู่นี้',
+    doctorRosterTitle: 'ตารางเวลาเข้าเวรของทันตแพทย์ (Clinic Dentist Schedules)',
+    doctorRosterSub: 'ตรวจสอบวันและช่วงเวลาเข้าตรวจของแพทย์เพื่อประกอบการตัดสินใจยืนยันคิวหรือจัดการเวลาชนกัน',
+    goToPlanner: 'วางแผนตารางเวรหมอ',
+    staffPreviewNotice: 'กำลังเปิดดู "มุมมองจองคิวคนไข้" (เจ้าหน้าที่สามารถดูรอบตรวจว่าง/จองได้ แต่ไม่สามารถส่งคำขอจองคิวแทนคนไข้ได้)',
+    staffPreviewBadge: 'มุมมองตรวจสอบ (คนไข้เท่านั้นที่จองได้)',
     // Reject Modal
     rejectModalTitle: 'ระบุเหตุผลการปฏิเสธ หรือยกเลิกเนื่องจากเวลาชนกัน',
     rejectModalDesc: 'เมื่อยืนยันปฏิเสธ สถานะนัดหมายจะเปลี่ยนเป็น "เวลาชนกัน" และระบบจะปลดล็อกรอบเวลาตรวจคืนเป็นสถานะว่างทันทีเพื่อให้คนไข้อื่นสามารถจองได้',
@@ -398,6 +403,11 @@ export const I18N = {
     confirmBtn: 'Confirm Appointment',
     rejectConflictBtn: 'Reject (Conflict)',
     noAdminAppts: 'No appointments found in this category.',
+    doctorRosterTitle: 'Clinic Dentist Duty Rosters & Shift Hours',
+    doctorRosterSub: 'Review active provider shift hours to facilitate appointment approvals and conflict handling.',
+    goToPlanner: 'Schedule Planner',
+    staffPreviewNotice: 'Viewing "Customer Booking Preview" (Staff can inspect availability, but cannot submit bookings on behalf of patients).',
+    staffPreviewBadge: 'Staff Preview (Patient Only)',
     // Reject Modal
     rejectModalTitle: 'State Reason for Rejection / Schedule Conflict',
     rejectModalDesc: 'Upon rejection, status changes to "Conflict Cancelled" and the time slot is immediately recycled back to Available for other patients.',
@@ -479,15 +489,15 @@ export default function App() {
     </div>
   );
 
-  const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments' | 'staff-appointments' | 'staff-schedules'>('booking');
+  const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments' | 'staff-appointments' | 'staff-schedules'>('services');
   const selectedClinic = CLINIC_OPTIONS[0];
 
-  // Auto switch default view on login based on role
+  // Auto switch default view on login based on role (Customer lands on Services catalog first)
   useEffect(() => {
     if (currentUser?.role === 'STAFF') {
       setCurrentView('staff-appointments');
     } else if (currentUser?.role === 'CUSTOMER') {
-      setCurrentView('booking');
+      setCurrentView('services');
     }
   }, [currentUser?.role]);
 
@@ -515,6 +525,74 @@ export default function App() {
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
+  // Helper to generate discrete 30-min slots for a given shift
+  const generateSlotsForShift = (dentistId: string, dateStr: string, startT: string, endT: string, schedId: string): TimeSlot[] => {
+    const slotsList: TimeSlot[] = [];
+    const [sH, sM] = startT.split(':').map(Number);
+    const [eH, eM] = endT.split(':').map(Number);
+    let cur = new Date(`${dateStr}T${String(sH).padStart(2, '0')}:${String(sM).padStart(2, '0')}:00`);
+    const end = new Date(`${dateStr}T${String(eH).padStart(2, '0')}:${String(eM).padStart(2, '0')}:00`);
+
+    while (cur.getTime() + 1800000 <= end.getTime()) {
+      const slotEnd = new Date(cur.getTime() + 1800000);
+      const hStr = String(cur.getHours()).padStart(2, '0');
+      const mStr = String(cur.getMinutes()).padStart(2, '0');
+      slotsList.push({
+        id: `slot-${dentistId}-${dateStr}-${hStr}-${mStr}`,
+        scheduleId: schedId,
+        slotStart: cur.toISOString(),
+        slotEnd: slotEnd.toISOString(),
+        status: 'AVAILABLE',
+      });
+      cur = slotEnd;
+    }
+    return slotsList;
+  };
+
+  // Staff Schedule Planner State (F-03) - Initialized with seeded rosters for tomorrow
+  const [adminSchedules, setAdminSchedules] = useState<any[]>(() => [
+    {
+      id: 'sched-init-somchai',
+      dentistId: 'dentist-somchai',
+      workDate: tomorrowStr,
+      startTime: `${tomorrowStr}T09:00:00.000Z`,
+      endTime: `${tomorrowStr}T12:00:00.000Z`,
+      dentist: DEFAULT_DENTISTS[0],
+      slots: [
+        { id: `slot-dentist-somchai-${tomorrowStr}-09-00`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T09:00:00.000Z`, slotEnd: `${tomorrowStr}T09:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-somchai-${tomorrowStr}-09-30`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T09:30:00.000Z`, slotEnd: `${tomorrowStr}T10:00:00.000Z`, status: 'BOOKED' },
+        { id: `slot-dentist-somchai-${tomorrowStr}-10-00`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T10:00:00.000Z`, slotEnd: `${tomorrowStr}T10:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-somchai-${tomorrowStr}-10-30`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T10:30:00.000Z`, slotEnd: `${tomorrowStr}T11:00:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-somchai-${tomorrowStr}-11-00`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T11:00:00.000Z`, slotEnd: `${tomorrowStr}T11:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-somchai-${tomorrowStr}-11-30`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T11:30:00.000Z`, slotEnd: `${tomorrowStr}T12:00:00.000Z`, status: 'AVAILABLE' },
+      ],
+    },
+    {
+      id: 'sched-init-suda',
+      dentistId: 'dentist-suda',
+      workDate: tomorrowStr,
+      startTime: `${tomorrowStr}T13:00:00.000Z`,
+      endTime: `${tomorrowStr}T16:30:00.000Z`,
+      dentist: DEFAULT_DENTISTS[1],
+      slots: [
+        { id: `slot-dentist-suda-${tomorrowStr}-13-00`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T13:00:00.000Z`, slotEnd: `${tomorrowStr}T13:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-suda-${tomorrowStr}-13-30`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T13:30:00.000Z`, slotEnd: `${tomorrowStr}T14:00:00.000Z`, status: 'BOOKED' },
+        { id: `slot-dentist-suda-${tomorrowStr}-14-00`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T14:00:00.000Z`, slotEnd: `${tomorrowStr}T14:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-suda-${tomorrowStr}-14-30`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T14:30:00.000Z`, slotEnd: `${tomorrowStr}T15:00:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-suda-${tomorrowStr}-15-00`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T15:00:00.000Z`, slotEnd: `${tomorrowStr}T15:30:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-suda-${tomorrowStr}-15-30`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T15:30:00.000Z`, slotEnd: `${tomorrowStr}T16:00:00.000Z`, status: 'AVAILABLE' },
+        { id: `slot-dentist-suda-${tomorrowStr}-16-00`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T16:00:00.000Z`, slotEnd: `${tomorrowStr}T16:30:00.000Z`, status: 'AVAILABLE' },
+      ],
+    },
+  ]);
+  const [loadingAdminSchedules, setLoadingAdminSchedules] = useState(false);
+  const [scheduleDentist, setScheduleDentist] = useState('dentist-somchai');
+  const [scheduleDate, setScheduleDate] = useState(tomorrowStr);
+  const [scheduleStartTime, setScheduleStartTime] = useState('09:00');
+  const [scheduleEndTime, setScheduleEndTime] = useState('12:00');
+  const [submittingSchedule, setSubmittingSchedule] = useState(false);
+  const [scheduleMessage, setScheduleMessage] = useState<string | null>(null);
+
   // Booking Modal
   const [activeSlot, setActiveSlot] = useState<TimeSlot | null>(null);
   const [serviceType, setServiceType] = useState(DENTAL_SERVICES_CATALOG[0].name);
@@ -523,27 +601,78 @@ export default function App() {
   const [conflictError, setConflictError] = useState<string | null>(null);
   const [successCode, setSuccessCode] = useState<string | null>(null);
 
-  // My Appointments state
-  const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
-  const [loadingAppointments, setLoadingAppointments] = useState(false);
-
   // Staff Master Dashboard State (F-03)
-  const [adminAppointments, setAdminAppointments] = useState<(Appointment & { customer?: { fullName: string; email: string; phoneNumber?: string } })[]>([]);
+  const [adminAppointments, setAdminAppointments] = useState<(Appointment & { customer?: { fullName: string; email: string; phoneNumber?: string } })[]>(() => [
+    {
+      id: 'apt-init-1',
+      appointmentCode: 'APT-1082',
+      customerId: 'usr-cust-1',
+      dentistId: 'dentist-somchai',
+      timeSlotId: `slot-dentist-somchai-${tomorrowStr}-09-30`,
+      serviceType: 'ขูดหินปูนและขัดฟัน (Scaling & Polishing)',
+      reasonForVisit: 'ตรวจสุขภาพฟันประจำปี และมีอาการเสียวฟันกรามล่างขวา',
+      status: 'PENDING_REVIEW',
+      staffNotes: null,
+      createdAt: new Date().toISOString(),
+      customer: { fullName: 'สมศักดิ์ รักฟันดี', email: 'customer1@test.com', phoneNumber: '081-234-5678' },
+      dentist: DEFAULT_DENTISTS[0],
+      timeSlot: { id: `slot-dentist-somchai-${tomorrowStr}-09-30`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T09:30:00.000Z`, slotEnd: `${tomorrowStr}T10:00:00.000Z`, status: 'BOOKED' },
+    },
+    {
+      id: 'apt-init-2',
+      appointmentCode: 'APT-1055',
+      customerId: 'usr-cust-2',
+      dentistId: 'dentist-suda',
+      timeSlotId: `slot-dentist-suda-${tomorrowStr}-13-30`,
+      serviceType: 'ปรึกษาจัดฟันและวางแผนการรักษา (Orthodontic Consultation)',
+      reasonForVisit: 'ต้องการปรึกษาจัดฟันแบบใส Invisalign',
+      status: 'CONFIRMED',
+      staffNotes: 'ยืนยันคิวตรวจเรียบร้อยแล้ว แจ้งคนไข้งดอาหารก่อนเวลา 30 นาที',
+      createdAt: new Date(Date.now() - 3600000).toISOString(),
+      customer: { fullName: 'วิภาดา ยิ้มสวย', email: 'customer2@test.com', phoneNumber: '089-876-5432' },
+      dentist: DEFAULT_DENTISTS[1],
+      timeSlot: { id: `slot-dentist-suda-${tomorrowStr}-13-30`, scheduleId: 'sched-init-suda', slotStart: `${tomorrowStr}T13:30:00.000Z`, slotEnd: `${tomorrowStr}T14:00:00.000Z`, status: 'BOOKED' },
+    },
+    {
+      id: 'apt-init-3',
+      appointmentCode: 'APT-0941',
+      customerId: 'usr-cust-3',
+      dentistId: 'dentist-somchai',
+      timeSlotId: `slot-dentist-somchai-${tomorrowStr}-11-00`,
+      serviceType: 'ผ่าฟันคุด / ถอนฟันคุด (Wisdom Tooth Surgery)',
+      reasonForVisit: 'ปวดฟันคุดซี่ในสุดล่างซ้าย',
+      status: 'CANCELLED_CONFLICT',
+      staffNotes: 'ทันตแพทย์ติดเคสผ่าตัดด่วน คลินิกประสานงานแจ้งคนไข้ขอเปลี่ยนเป็นวันถัดไป',
+      createdAt: new Date(Date.now() - 7200000).toISOString(),
+      customer: { fullName: 'กิตติศักดิ์ ชัยชนะ', email: 'kittisak@test.com', phoneNumber: '086-111-2233' },
+      dentist: DEFAULT_DENTISTS[0],
+      timeSlot: { id: `slot-dentist-somchai-${tomorrowStr}-11-00`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T11:00:00.000Z`, slotEnd: `${tomorrowStr}T11:30:00.000Z`, status: 'AVAILABLE' },
+    },
+  ]);
   const [loadingAdminAppointments, setLoadingAdminAppointments] = useState(false);
   const [adminStatusFilter, setAdminStatusFilter] = useState<string>('ALL');
   const [rejectModalApt, setRejectModalApt] = useState<Appointment | null>(null);
   const [staffRejectNotes, setStaffRejectNotes] = useState<string>('');
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
-  // Staff Schedule Planner State (F-03)
-  const [adminSchedules, setAdminSchedules] = useState<any[]>([]);
-  const [loadingAdminSchedules, setLoadingAdminSchedules] = useState(false);
-  const [scheduleDentist, setScheduleDentist] = useState('dentist-somchai');
-  const [scheduleDate, setScheduleDate] = useState(tomorrowStr);
-  const [scheduleStartTime, setScheduleStartTime] = useState('09:00');
-  const [scheduleEndTime, setScheduleEndTime] = useState('12:00');
-  const [submittingSchedule, setSubmittingSchedule] = useState(false);
-  const [scheduleMessage, setScheduleMessage] = useState<string | null>(null);
+  // My Appointments state - pre-populated for seeded customer preview
+  const [myAppointments, setMyAppointments] = useState<Appointment[]>(() => [
+    {
+      id: 'apt-init-1',
+      appointmentCode: 'APT-1082',
+      customerId: 'usr-cust-1',
+      dentistId: 'dentist-somchai',
+      timeSlotId: `slot-dentist-somchai-${tomorrowStr}-09-30`,
+      serviceType: 'ขูดหินปูนและขัดฟัน (Scaling & Polishing)',
+      reasonForVisit: 'ตรวจสุขภาพฟันประจำปี และมีอาการเสียวฟันกรามล่างขวา',
+      status: 'PENDING_REVIEW',
+      staffNotes: null,
+      createdAt: new Date().toISOString(),
+      dentist: DEFAULT_DENTISTS[0],
+      timeSlot: { id: `slot-dentist-somchai-${tomorrowStr}-09-30`, scheduleId: 'sched-init-somchai', slotStart: `${tomorrowStr}T09:30:00.000Z`, slotEnd: `${tomorrowStr}T10:00:00.000Z`, status: 'BOOKED' },
+    },
+  ]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
 
   // Load dentists dynamically from API on mount
   useEffect(() => {
@@ -578,12 +707,12 @@ export default function App() {
     }
   }, []);
 
-  // Fetch slots when dentist or date changes
+  // Fetch slots when dentist or date changes or schedules change
   useEffect(() => {
     if (currentUser) {
       loadSlots();
     }
-  }, [currentUser, selectedDentist, selectedDate]);
+  }, [currentUser, selectedDentist, selectedDate, adminSchedules]);
 
   // Fetch appointments when switching to my-appointments
   useEffect(() => {
@@ -598,33 +727,25 @@ export default function App() {
       const res = await api.getAvailableSlots(selectedDentist, selectedDate);
       if (res.data && res.data.length > 0) {
         setSlots(res.data);
-      } else {
-        generateDemoSlots();
+        setSlotsLoading(false);
+        return;
       }
     } catch {
-      generateDemoSlots();
-    } finally {
-      setSlotsLoading(false);
+      // Offline fallback below
     }
-  };
 
-  const generateDemoSlots = () => {
-    const demo: TimeSlot[] = [];
-    const hours = [9, 10, 11, 13, 14, 15, 16];
-    hours.forEach((h, idx) => {
-      [0, 30].forEach((m) => {
-        const start = new Date(`${selectedDate}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`);
-        const end = new Date(start.getTime() + 1800000);
-        demo.push({
-          id: `slot-${selectedDentist}-${selectedDate}-${h}-${m}`,
-          scheduleId: 'sched-1',
-          slotStart: start.toISOString(),
-          slotEnd: end.toISOString(),
-          status: idx === 1 && m === 30 ? 'BOOKED' : 'AVAILABLE',
-        });
-      });
+    // Check if adminSchedules has a schedule for selectedDentist and selectedDate
+    const matchingSched = adminSchedules.find((s) => {
+      const schedDateStr = (s.workDate || '').includes('T') ? s.workDate.split('T')[0] : s.workDate;
+      return s.dentistId === selectedDentist && schedDateStr === selectedDate;
     });
-    setSlots(demo);
+
+    if (matchingSched && matchingSched.slots && matchingSched.slots.length > 0) {
+      setSlots(matchingSched.slots);
+    } else {
+      setSlots([]);
+    }
+    setSlotsLoading(false);
   };
 
   const loadMyAppointments = async () => {
@@ -687,9 +808,9 @@ export default function App() {
       loadAdminAppointments();
     } catch {
       // Fallback update in client state
+    } finally {
       setAdminAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'CONFIRMED' } : a));
       setMyAppointments(prev => prev.map(a => a.id === id ? { ...a, status: 'CONFIRMED' } : a));
-    } finally {
       setUpdatingStatusId(null);
     }
   };
@@ -700,23 +821,24 @@ export default function App() {
       alert(lang === 'th' ? 'กรุณาระบุหมายเหตุหรือเหตุผลการปฏิเสธเพื่อแจ้งคนไข้' : 'Please provide staff notes for the rejection');
       return;
     }
-    setUpdatingStatusId(rejectModalApt.id);
+    const targetId = rejectModalApt.id;
+    const notes = staffRejectNotes;
+    const timeSlotId = rejectModalApt.timeSlotId;
+    setUpdatingStatusId(targetId);
     try {
-      await api.updateAppointmentStatus(rejectModalApt.id, {
+      await api.updateAppointmentStatus(targetId, {
         status: 'CANCELLED_CONFLICT',
-        staffNotes: staffRejectNotes,
+        staffNotes: notes,
       });
-      setRejectModalApt(null);
-      setStaffRejectNotes('');
       loadAdminAppointments();
     } catch {
       // Fallback update in client state & recycle slot
-      setAdminAppointments(prev => prev.map(a => a.id === rejectModalApt.id ? { ...a, status: 'CANCELLED_CONFLICT', staffNotes: staffRejectNotes } : a));
-      setMyAppointments(prev => prev.map(a => a.id === rejectModalApt.id ? { ...a, status: 'CANCELLED_CONFLICT', staffNotes: staffRejectNotes } : a));
-      setSlots(prev => prev.map(s => s.id === rejectModalApt.timeSlotId ? { ...s, status: 'AVAILABLE' } : s));
+    } finally {
+      setAdminAppointments(prev => prev.map(a => a.id === targetId ? { ...a, status: 'CANCELLED_CONFLICT', staffNotes: notes } : a));
+      setMyAppointments(prev => prev.map(a => a.id === targetId ? { ...a, status: 'CANCELLED_CONFLICT', staffNotes: notes } : a));
+      setSlots(prev => prev.map(s => s.id === timeSlotId ? { ...s, status: 'AVAILABLE' } : s));
       setRejectModalApt(null);
       setStaffRejectNotes('');
-    } finally {
       setUpdatingStatusId(null);
     }
   };
@@ -725,38 +847,40 @@ export default function App() {
     e.preventDefault();
     setSubmittingSchedule(true);
     setScheduleMessage(null);
+
+    const schedId = `sched-${Date.now()}`;
+    const generatedSlots = generateSlotsForShift(scheduleDentist, scheduleDate, scheduleStartTime, scheduleEndTime, schedId);
+    const dentistObj = dentists.find(d => d.id === scheduleDentist) || DEFAULT_DENTISTS[0];
+    const newSched = {
+      id: schedId,
+      dentistId: scheduleDentist,
+      workDate: scheduleDate,
+      startTime: `${scheduleDate}T${scheduleStartTime}:00.000Z`,
+      endTime: `${scheduleDate}T${scheduleEndTime}:00.000Z`,
+      dentist: dentistObj,
+      slots: generatedSlots,
+    };
+
     try {
-      const res = await api.createSchedule({
+      await api.createSchedule({
         dentistId: scheduleDentist,
         workDate: scheduleDate,
         startTime: scheduleStartTime,
         endTime: scheduleEndTime,
       });
-      setScheduleMessage(
-        lang === 'th'
-          ? `สร้างรอบตรวจสำเร็จ! ระบบสร้างช่วงเวลาตรวจ 30 นาทีจำนวน ${res.data.generatedSlotsCount} รอบเรียบร้อยแล้ว`
-          : `Schedule registered! Successfully generated ${res.data.generatedSlotsCount} discrete 30-min slots.`
-      );
       loadAdminSchedules();
     } catch {
-      // Fallback local schedule creation
-      const dentistObj = dentists.find(d => d.id === scheduleDentist) || DEFAULT_DENTISTS[0];
-      const newSched = {
-        id: `sched-${Date.now()}`,
-        dentistId: scheduleDentist,
-        workDate: scheduleDate,
-        startTime: `${scheduleDate}T${scheduleStartTime}:00`,
-        endTime: `${scheduleDate}T${scheduleEndTime}:00`,
-        dentist: dentistObj,
-        slots: Array.from({ length: 6 }).map((_, i) => ({ id: `slot-${i}` })),
-      };
-      setAdminSchedules(prev => [newSched, ...prev]);
+      // Offline fallback
+    } finally {
+      setAdminSchedules(prev => [newSched, ...prev.filter(s => !(s.dentistId === scheduleDentist && ((s.workDate || '').split('T')[0] === scheduleDate)))]);
+      if (selectedDentist === scheduleDentist && selectedDate === scheduleDate) {
+        setSlots(generatedSlots);
+      }
       setScheduleMessage(
         lang === 'th'
-          ? 'สร้างรอบตรวจสำเร็จ! ระบบสร้างช่วงเวลาตรวจ 30 นาทีจำนวน 6 รอบเรียบร้อยแล้ว'
-          : 'Schedule registered! Successfully generated 6 discrete 30-min slots.'
+          ? `สร้างตารางเวรสำเร็จ! ระบบแตกสร้างช่วงเวลาตรวจ 30 นาทีจำนวน ${generatedSlots.length} รอบเรียบร้อยแล้ว และเชื่อมต่อสู่หน้าคนไข้ทันที`
+          : `Schedule registered! Created ${generatedSlots.length} discrete 30-min slots, instantly visible in Customer Booking view.`
       );
-    } finally {
       setSubmittingSchedule(false);
     }
   };
@@ -771,6 +895,7 @@ export default function App() {
       setCurrentUser(res.user);
     } catch {
       // Seamless mock login fallback for instant offline testing
+      authStorage.clearToken();
       const isStaff = targetEmail.includes('staff');
       const mockUser: User = {
         id: isStaff ? 'usr-staff-1' : targetEmail.includes('2') ? 'usr-cust-2' : 'usr-cust-1',
@@ -840,7 +965,8 @@ export default function App() {
             : 'Booking limit reached: Maximum 2 active appointments allowed.'
         );
       } else {
-        // Fallback: Create client-side mock appointment gracefully (solves Server error when backend is offline)
+        // Fallback: Create client-side mock appointment gracefully (solves Server error when backend is offline or token is invalid)
+        authStorage.clearToken();
         const randomDigits = Math.floor(Math.random() * 900) + 100;
         const code = `APT-202611-${randomDigits}`;
         const dentistObj = dentists.find(d => d.id === selectedDentist) || DEFAULT_DENTISTS[0];
@@ -925,6 +1051,11 @@ export default function App() {
     setSelectedServiceNotice(lang === 'th' ? procedure.name : procedure.nameEn);
     setCurrentView('booking');
   };
+
+  const displayedAdminAppointments = adminAppointments.filter((apt) => {
+    if (adminStatusFilter === 'ALL') return true;
+    return apt.status === adminStatusFilter;
+  });
 
   // If not logged in, show Login Screen
   if (!currentUser) {
@@ -1118,16 +1249,16 @@ export default function App() {
           ) : (
             <>
               <button
-                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setCurrentView('booking')}
-              >
-                {t.tabBooking}
-              </button>
-              <button
                 className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('services')}
               >
                 {t.tabCatalog}
+              </button>
+              <button
+                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('booking')}
+              >
+                {t.tabBooking}
               </button>
               <button
                 className={`btn ${currentView === 'my-appointments' ? 'btn-primary' : 'btn-secondary'}`}
@@ -1374,6 +1505,24 @@ export default function App() {
               </div>
             )}
 
+            {currentUser?.role === 'STAFF' && (
+              <div style={{
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                color: '#166534',
+                padding: '12px 18px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ fontSize: '16px' }}>👀</span>
+                <span>{t.staffPreviewNotice}</span>
+              </div>
+            )}
+
             <div className="card">
               <h2 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '16px', letterSpacing: '-0.2px' }}>
                 {t.bookingTitle}
@@ -1445,16 +1594,32 @@ export default function App() {
                           {lang === 'th' ? 'ระยะเวลาตรวจ 30 นาที' : '30-minute interval'}
                         </div>
                         {isAvail ? (
-                          <button
-                            className="btn btn-primary"
-                            style={{ width: '100%', fontSize: '13px', padding: '7px 12px' }}
-                            onClick={() => {
-                              setActiveSlot(s);
-                              setConflictError(null);
-                            }}
-                          >
-                            {t.slotBookBtn}
-                          </button>
+                          currentUser?.role === 'STAFF' ? (
+                            <div style={{
+                              width: '100%',
+                              padding: '7px 10px',
+                              background: '#f1f5f9',
+                              color: '#64748b',
+                              borderRadius: '8px',
+                              fontSize: '11.5px',
+                              fontWeight: 600,
+                              textAlign: 'center',
+                              border: '1px solid #cbd5e1'
+                            }}>
+                              {t.staffPreviewBadge}
+                            </div>
+                          ) : (
+                            <button
+                              className="btn btn-primary"
+                              style={{ width: '100%', fontSize: '13px', padding: '7px 12px' }}
+                              onClick={() => {
+                                setActiveSlot(s);
+                                setConflictError(null);
+                              }}
+                            >
+                              {t.slotBookBtn}
+                            </button>
+                          )
                         ) : (
                           <button
                             className="btn btn-secondary"
@@ -1593,36 +1758,101 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Doctor Duty Overview for Staff */}
+              <div style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #fdf4f7 100%)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '16px 20px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '14.5px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
+                      🗓️ {t.doctorRosterTitle}
+                    </h3>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                      {t.doctorRosterSub}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '12px', padding: '5px 12px', color: 'var(--primary)', fontWeight: 600 }}
+                    onClick={() => setCurrentView('staff-schedules')}
+                  >
+                    {t.goToPlanner}
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+                  {adminSchedules.slice(0, 4).map((s) => {
+                    const dName = lang === 'th' ? s.dentist?.name : (dentists.find(d => d.id === s.dentistId)?.nameEn || s.dentist?.name);
+                    const dSpec = lang === 'th' ? s.dentist?.specialty : (dentists.find(d => d.id === s.dentistId)?.specialtyEn || s.dentist?.specialty);
+                    const sDate = s.workDate ? (s.workDate.includes('T') ? s.workDate.split('T')[0] : s.workDate) : '';
+                    const availCount = s.slots ? s.slots.filter((sl: any) => sl.status === 'AVAILABLE').length : 0;
+                    const totalCount = s.slots ? s.slots.length : 0;
+                    const startTimeStr = s.startTime ? new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:00';
+                    const endTimeStr = s.endTime ? new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '12:00';
+
+                    return (
+                      <div key={s.id} style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '12px 14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <strong style={{ fontSize: '13.5px', color: 'var(--primary)' }}>{dName}</strong>
+                          <span className="badge badge-available" style={{ fontSize: '11px' }}>
+                            {availCount}/{totalCount} {lang === 'th' ? 'รอบว่าง' : 'available'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{dSpec}</div>
+                        <div style={{ fontSize: '12.5px', color: 'var(--text-main)', marginTop: '6px', fontWeight: 500 }}>
+                          วันที่: {sDate} | เวรตรวจ: {startTimeStr} - {endTimeStr}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Status Filter Tabs */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
                 {[
-                  { id: 'ALL', label: t.filterAll },
-                  { id: 'PENDING_REVIEW', label: t.filterPending },
-                  { id: 'CONFIRMED', label: t.filterConfirmed },
-                  { id: 'CANCELLED_CONFLICT', label: t.filterConflict },
-                  { id: 'CANCELLED_BY_CUSTOMER', label: t.filterCancelledCust },
+                  { id: 'ALL', label: t.filterAll, count: adminAppointments.length },
+                  { id: 'PENDING_REVIEW', label: t.filterPending, count: adminAppointments.filter(a => a.status === 'PENDING_REVIEW').length },
+                  { id: 'CONFIRMED', label: t.filterConfirmed, count: adminAppointments.filter(a => a.status === 'CONFIRMED').length },
+                  { id: 'CANCELLED_CONFLICT', label: t.filterConflict, count: adminAppointments.filter(a => a.status === 'CANCELLED_CONFLICT').length },
+                  { id: 'CANCELLED_BY_CUSTOMER', label: t.filterCancelledCust, count: adminAppointments.filter(a => a.status === 'CANCELLED_BY_CUSTOMER').length },
                 ].map((f) => (
                   <button
                     key={f.id}
                     type="button"
                     className={`btn ${adminStatusFilter === f.id ? 'btn-primary' : 'btn-secondary'}`}
-                    style={{ fontSize: '12.5px', padding: '6px 14px' }}
+                    style={{ fontSize: '12.5px', padding: '6px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}
                     onClick={() => setAdminStatusFilter(f.id)}
                   >
-                    {f.label}
+                    <span>{f.label}</span>
+                    <span style={{
+                      padding: '1px 6px',
+                      borderRadius: '10px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      background: adminStatusFilter === f.id ? 'rgba(255,255,255,0.25)' : '#e2e8f0',
+                      color: adminStatusFilter === f.id ? '#fff' : 'var(--text-muted)'
+                    }}>
+                      {f.count}
+                    </span>
                   </button>
                 ))}
               </div>
 
               {loadingAdminAppointments ? (
                 <div style={{ textAlign: 'center', padding: '40px' }}>{t.loadingAppts}</div>
-              ) : adminAppointments.length === 0 ? (
+              ) : displayedAdminAppointments.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
                   <p style={{ marginTop: '10px' }}>{t.noAdminAppts}</p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {adminAppointments.map((apt) => {
+                  {displayedAdminAppointments.map((apt) => {
                     const statusBadgeClass =
                       apt.status === 'CONFIRMED' ? 'badge-confirmed' :
                       apt.status === 'PENDING_REVIEW' ? 'badge-pending' : 'badge-cancelled';
