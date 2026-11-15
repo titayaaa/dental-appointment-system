@@ -2060,7 +2060,7 @@ export default function App() {
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{dSpec}</div>
                         <div style={{ fontSize: '12.5px', color: 'var(--text-main)', marginTop: '6px', fontWeight: 500 }}>
-                          วันที่: {sDate} | เวรตรวจ: {startTimeStr} - {endTimeStr}
+                          {lang === 'th' ? 'วันที่' : 'Date'}: {sDate} | {lang === 'th' ? 'เวรตรวจ' : 'Shift'}: {startTimeStr} - {endTimeStr}
                         </div>
                       </div>
                     );
@@ -2138,7 +2138,7 @@ export default function App() {
                               <span className={`badge ${statusBadgeClass}`}>{statusText}</span>
                             </div>
                             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
-                              {t.patientLabel} {apt.customer?.fullName || 'คนไข้'} {apt.customer?.phoneNumber ? `(${t.phoneLabel} ${apt.customer.phoneNumber})` : ''}
+                              {t.patientLabel} {apt.customer?.fullName || (lang === 'th' ? 'คนไข้' : 'Patient')} {apt.customer?.phoneNumber ? `(${t.phoneLabel} ${apt.customer.phoneNumber})` : ''}
                             </div>
                             <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '3px' }}>
                               {t.dentistLabel} <strong>{dentistName}</strong>
@@ -2589,7 +2589,7 @@ export default function App() {
 
               <div style={{ background: '#f8faf9', padding: '12px 14px', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', border: '1px solid #e7eee9' }}>
                 <div><strong>{t.apptCodeLabel}</strong> {rejectModalApt.appointmentCode}</div>
-                <div><strong>{t.patientLabel}</strong> {rejectModalApt.customer?.fullName || 'คนไข้'}</div>
+                <div><strong>{t.patientLabel}</strong> {rejectModalApt.customer?.fullName || (lang === 'th' ? 'คนไข้' : 'Patient')}</div>
               </div>
 
               <div className="form-group">
