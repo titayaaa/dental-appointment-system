@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { Role } from '@prisma/client';
 import authRoutes from './routes/auth.routes';
 import appointmentRoutes from './routes/appointment.routes';
+import adminRoutes from './routes/admin.routes';
 import { requireAuth, requireRole } from './middlewares/auth.middleware';
 
 dotenv.config();
@@ -33,6 +34,9 @@ app.use('/api/auth', authRoutes);
 
 // Appointment & Slot routes (Customer domain)
 app.use('/api', appointmentRoutes);
+
+// Admin & Staff routes (Staff domain)
+app.use('/api/admin', adminRoutes);
 
 // Protected verification endpoint for role authorization testing (TEST-SEC-02 / TEST-05)
 app.get('/api/test/staff-only', requireAuth, requireRole([Role.STAFF]), (req: Request, res: Response) => {

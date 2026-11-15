@@ -35,6 +35,7 @@ export interface Appointment {
   createdAt: string;
   dentist?: Dentist;
   timeSlot?: TimeSlot;
+  customer?: { id?: string; fullName: string; email: string; phoneNumber?: string };
 }
 
 const TOKEN_KEY = 'smilesync_token';
@@ -117,6 +118,30 @@ export const api = {
   cancelAppointment: async (id: string) => {
     return request<{ success: boolean; data: { message: string } }>(`/api/my-appointments/${id}/cancel`, {
       method: 'PATCH',
+    });
+  },
+
+  // Staff Admin (F-03)
+  getAdminSchedules: async () => {
+    return request<{ success: boolean; data: any[] }>('/api/admin/schedules');
+  },
+  createSchedule: async (payload: { dentistId: string; workDate: string; startTime: string; endTime: string }) => {
+    return request<{ success: boolean; data: { schedule: any; generatedSlotsCount: number } }>('/api/admin/schedules', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+  getAdminAppointments: async (status?: string, date?: string) => {
+    const params = new URLSearchParams();
+    if (status && status !== 'ALL') params.append('status', status);
+    if (date) params.append('date', date);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    return request<{ success: boolean; data: (Appointment & { customer?: { fullName: string; email: string; phoneNumber?: string } })[] }>(`/api/admin/appointments${queryString}`);
+  },
+  updateAppointmentStatus: async (id: string, payload: { status: 'CONFIRMED' | 'CANCELLED_CONFLICT'; staffNotes?: string }) => {
+    return request<{ success: boolean; data: { appointment: Appointment; message: string } }>(`/api/admin/appointments/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
     });
   },
 };

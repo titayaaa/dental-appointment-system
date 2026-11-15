@@ -140,8 +140,17 @@ const SERVICES = DENTAL_SERVICES_CATALOG.map((s) => s.name);
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments'>('booking');
+  const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments' | 'staff-appointments' | 'staff-schedules'>('booking');
   const selectedClinic = CLINIC_OPTIONS[0];
+
+  // Auto switch default view on login based on role
+  useEffect(() => {
+    if (currentUser?.role === 'STAFF') {
+      setCurrentView('staff-appointments');
+    } else if (currentUser?.role === 'CUSTOMER') {
+      setCurrentView('booking');
+    }
+  }, [currentUser?.role]);
 
   // Catalog filters
   const [catalogCategory, setCatalogCategory] = useState<string>('ทั้งหมด');
@@ -173,6 +182,24 @@ export default function App() {
   // My Appointments state
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+
+  // Staff Master Dashboard State (F-03)
+  const [adminAppointments, setAdminAppointments] = useState<(Appointment & { customer?: { fullName: string; email: string; phoneNumber?: string } })[]>([]);
+  const [loadingAdminAppointments, setLoadingAdminAppointments] = useState(false);
+  const [adminStatusFilter, setAdminStatusFilter] = useState<string>('ALL');
+  const [rejectModalApt, setRejectModalApt] = useState<Appointment | null>(null);
+  const [staffRejectNotes, setStaffRejectNotes] = useState<string>('');
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
+  // Staff Schedule Planner State (F-03)
+  const [adminSchedules, setAdminSchedules] = useState<any[]>([]);
+  const [loadingAdminSchedules, setLoadingAdminSchedules] = useState(false);
+  const [scheduleDentist, setScheduleDentist] = useState('dentist-somchai');
+  const [scheduleDate, setScheduleDate] = useState(tomorrowStr);
+  const [scheduleStartTime, setScheduleStartTime] = useState('09:00');
+  const [scheduleEndTime, setScheduleEndTime] = useState('12:00');
+  const [submittingSchedule, setSubmittingSchedule] = useState(false);
+  const [scheduleMessage, setScheduleMessage] = useState<string | null>(null);
 
   // Load dentists dynamically from API on mount
   useEffect(() => {
@@ -253,6 +280,95 @@ export default function App() {
       console.warn('API error fetching appointments:', err);
     } finally {
       setLoadingAppointments(false);
+    }
+  };
+
+  const loadAdminAppointments = async (status?: string) => {
+    setLoadingAdminAppointments(true);
+    try {
+      const res = await api.getAdminAppointments(status || adminStatusFilter);
+      setAdminAppointments(res.data);
+    } catch (err) {
+      console.warn('API error fetching admin appointments:', err);
+    } finally {
+      setLoadingAdminAppointments(false);
+    }
+  };
+
+  const loadAdminSchedules = async () => {
+    setLoadingAdminSchedules(true);
+    try {
+      const res = await api.getAdminSchedules();
+      setAdminSchedules(res.data);
+    } catch (err) {
+      console.warn('API error fetching admin schedules:', err);
+    } finally {
+      setLoadingAdminSchedules(false);
+    }
+  };
+
+  // Fetch admin data when switching to staff views
+  useEffect(() => {
+    if (currentUser?.role === 'STAFF') {
+      if (currentView === 'staff-appointments') {
+        loadAdminAppointments(adminStatusFilter);
+      } else if (currentView === 'staff-schedules') {
+        loadAdminSchedules();
+      }
+    }
+  }, [currentUser, currentView, adminStatusFilter]);
+
+  const handleConfirmAppointment = async (id: string) => {
+    setUpdatingStatusId(id);
+    try {
+      await api.updateAppointmentStatus(id, { status: 'CONFIRMED' });
+      loadAdminAppointments();
+    } catch (err: any) {
+      alert(err.message || 'ยืนยันนัดหมายไม่สำเร็จ');
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const handleRejectAppointment = async () => {
+    if (!rejectModalApt) return;
+    if (!staffRejectNotes.trim()) {
+      alert('กรุณากรอกเหตุผลการปฏิเสธ / เวลาชนกัน เพื่อแจ้งคนไข้');
+      return;
+    }
+    setUpdatingStatusId(rejectModalApt.id);
+    try {
+      await api.updateAppointmentStatus(rejectModalApt.id, {
+        status: 'CANCELLED_CONFLICT',
+        staffNotes: staffRejectNotes,
+      });
+      setRejectModalApt(null);
+      setStaffRejectNotes('');
+      loadAdminAppointments();
+    } catch (err: any) {
+      alert(err.message || 'ปฏิเสธนัดหมายไม่สำเร็จ');
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
+
+  const handleCreateSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingSchedule(true);
+    setScheduleMessage(null);
+    try {
+      const res = await api.createSchedule({
+        dentistId: scheduleDentist,
+        workDate: scheduleDate,
+        startTime: scheduleStartTime,
+        endTime: scheduleEndTime,
+      });
+      setScheduleMessage(`สร้างรอบตรวจสำเร็จ! ระบบสร้างช่วงเวลาตรวจ 30 นาทีจำนวน ${res.data.generatedSlotsCount} รอบเรียบร้อยแล้ว`);
+      loadAdminSchedules();
+    } catch (err: any) {
+      alert(err.message || 'สร้างตารางเวรไม่สำเร็จ');
+    } finally {
+      setSubmittingSchedule(false);
     }
   };
 
@@ -499,24 +615,55 @@ export default function App() {
       <main className="container">
         {/* Navigation Tabs */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <button
-            className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setCurrentView('services')}
-          >
-            เมนูบริการและราคา (Service Catalog)
-          </button>
-          <button
-            className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setCurrentView('booking')}
-          >
-            จองเวลานัดหมาย (Book Appointment)
-          </button>
-          <button
-            className={`btn ${currentView === 'my-appointments' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setCurrentView('my-appointments')}
-          >
-            นัดหมายของฉัน (My Appointments)
-          </button>
+          {currentUser.role === 'STAFF' ? (
+            <>
+              <button
+                className={`btn ${currentView === 'staff-appointments' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('staff-appointments')}
+              >
+                จัดการนัดหมายทั้งหมด (Staff Dashboard)
+              </button>
+              <button
+                className={`btn ${currentView === 'staff-schedules' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('staff-schedules')}
+              >
+                วางแผนตารางเวรหมอ (Schedule Planner)
+              </button>
+              <button
+                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('booking')}
+              >
+                มุมมองจองคิวคนไข้ (Customer Booking)
+              </button>
+              <button
+                className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('services')}
+              >
+                เมนูบริการและราคา (Catalog)
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('services')}
+              >
+                เมนูบริการและราคา (Service Catalog)
+              </button>
+              <button
+                className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('booking')}
+              >
+                จองเวลานัดหมาย (Book Appointment)
+              </button>
+              <button
+                className={`btn ${currentView === 'my-appointments' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setCurrentView('my-appointments')}
+              >
+                นัดหมายของฉัน (My Appointments)
+              </button>
+            </>
+          )}
         </div>
 
         {/* Success Alert */}
@@ -883,6 +1030,260 @@ export default function App() {
           </div>
         )}
 
+        {/* VIEW 3: STAFF MASTER APPOINTMENTS DASHBOARD (F-03 / Showcase 2) */}
+        {currentView === 'staff-appointments' && (
+          <div>
+            <div className="card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '20px' }}>
+                <div>
+                  <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+                    แดชบอร์ดจัดการคิวนัดหมาย (Staff Master Dashboard)
+                  </h2>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
+                    ตรวจสอบคำขอนัดหมาย ยืนยันคิว และจัดการเวลาชนกัน (BR-05, BR-06)
+                  </p>
+                </div>
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12.5px', padding: '6px 14px' }}
+                  onClick={() => loadAdminAppointments()}
+                >
+                  รีเฟรชข้อมูล
+                </button>
+              </div>
+
+              {/* Status Filter Pills */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                {[
+                  { id: 'ALL', label: 'ทั้งหมด' },
+                  { id: 'PENDING_REVIEW', label: 'รอยืนยัน (Pending)' },
+                  { id: 'CONFIRMED', label: 'ยืนยันแล้ว (Confirmed)' },
+                  { id: 'CANCELLED_CONFLICT', label: 'เวลาชนกัน (Conflict)' },
+                  { id: 'CANCELLED_BY_CUSTOMER', label: 'คนไข้ยกเลิก' },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`btn ${adminStatusFilter === f.id ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ fontSize: '12.5px', padding: '6px 14px' }}
+                    onClick={() => setAdminStatusFilter(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              {loadingAdminAppointments ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>กำลังโหลดรายการนัดหมาย...</div>
+              ) : adminAppointments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+                  <p style={{ marginTop: '10px' }}>ไม่พบนัดหมายในหมวดหมู่นี้</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {adminAppointments.map((apt) => {
+                    const statusBadgeClass =
+                      apt.status === 'CONFIRMED' ? 'badge-confirmed' :
+                      apt.status === 'PENDING_REVIEW' ? 'badge-pending' : 'badge-cancelled';
+
+                    const statusText =
+                      apt.status === 'CONFIRMED' ? 'ยืนยันนัดหมายแล้ว' :
+                      apt.status === 'PENDING_REVIEW' ? 'รอยืนยันจากคลินิก' :
+                      apt.status === 'CANCELLED_CONFLICT' ? 'ยกเลิกเนื่องจากเวลาชนกัน' : 'ยกเลิกโดยคนไข้';
+
+                    const isActionable = apt.status === 'PENDING_REVIEW' || apt.status === 'CONFIRMED';
+
+                    return (
+                      <div
+                        key={apt.id}
+                        style={{
+                          border: '1px solid var(--border)',
+                          borderRadius: '12px',
+                          padding: '18px 20px',
+                          background: '#fff',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '14.5px', color: 'var(--primary)' }}>{apt.appointmentCode}</span>
+                              <span className={`badge ${statusBadgeClass}`}>{statusText}</span>
+                            </div>
+                            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginTop: '4px' }}>
+                              คนไข้: {apt.customer?.fullName || 'ไม่ระบุชื่อ'} {apt.customer?.phoneNumber ? `(โทร: ${apt.customer.phoneNumber})` : ''}
+                            </div>
+                            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                              ทันตแพทย์: <strong>{apt.dentist?.name}</strong> ({apt.dentist?.specialty})
+                            </div>
+                            <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              บริการ: <strong style={{ color: 'var(--pink-text)' }}>{apt.serviceType}</strong> | รอบเวลา: {apt.timeSlot?.slotStart ? new Date(apt.timeSlot.slotStart).toLocaleDateString('th-TH', { dateStyle: 'medium' }) : ''} เวลา {apt.timeSlot?.slotStart ? new Date(apt.timeSlot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''} - {apt.timeSlot?.slotEnd ? new Date(apt.timeSlot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                            {apt.reasonForVisit && (
+                              <div style={{ fontSize: '12.5px', background: '#f8faf9', padding: '6px 12px', borderRadius: '6px', marginTop: '8px', color: 'var(--text-main)' }}>
+                                <strong>อาการ/ข้อมูลเพิ่มเติม:</strong> {apt.reasonForVisit}
+                              </div>
+                            )}
+                            {apt.staffNotes && (
+                              <div style={{ fontSize: '12.5px', background: 'var(--danger-bg)', border: '1px solid var(--danger-border)', padding: '6px 12px', borderRadius: '6px', marginTop: '8px', color: 'var(--danger)' }}>
+                                <strong>หมายเหตุเจ้าหน้าที่:</strong> {apt.staffNotes}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Action Buttons for Staff */}
+                          {isActionable && (
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              {apt.status === 'PENDING_REVIEW' && (
+                                <button
+                                  className="btn btn-primary"
+                                  style={{ fontSize: '12.5px', padding: '6px 14px' }}
+                                  onClick={() => handleConfirmAppointment(apt.id)}
+                                  disabled={updatingStatusId === apt.id}
+                                >
+                                  {updatingStatusId === apt.id ? 'กำลังบันทึก...' : 'ยืนยันนัดหมาย'}
+                                </button>
+                              )}
+                              <button
+                                className="btn btn-danger"
+                                style={{ fontSize: '12.5px', padding: '6px 14px' }}
+                                onClick={() => {
+                                  setRejectModalApt(apt);
+                                  setStaffRejectNotes('ทันตแพทย์ติดเคสฉุกเฉิน กรุณาเลือกรอบใหม่');
+                                }}
+                                disabled={updatingStatusId === apt.id}
+                              >
+                                ปฏิเสธ (เวลาชนกัน)
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* VIEW 4: STAFF SCHEDULE PLANNER (FR-02) */}
+        {currentView === 'staff-schedules' && (
+          <div>
+            <div className="card">
+              <h2 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.3px', marginBottom: '6px' }}>
+                วางแผนและสร้างตารางเวรทันตแพทย์ (Dentist Schedule Planner)
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>
+                กำหนดวันเวลาเข้าเวรของทันตแพทย์ ระบบจะคำนวณและแตกสร้างรอบเวลาว่าง (Available Slots) ละ 30 นาทีให้อัตโนมัติ (FR-02)
+              </p>
+
+              {scheduleMessage && (
+                <div style={{ background: 'var(--success-bg)', color: 'var(--success)', padding: '12px 16px', borderRadius: '10px', fontSize: '13.5px', marginBottom: '18px', border: '1px solid var(--success-border)' }}>
+                  <strong>{scheduleMessage}</strong>
+                </div>
+              )}
+
+              <form onSubmit={handleCreateSchedule} style={{ background: '#f8faf9', padding: '20px', borderRadius: '12px', border: '1px solid #e7eee9', marginBottom: '24px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">เลือกทันตแพทย์</label>
+                    <select
+                      className="form-control"
+                      value={scheduleDentist}
+                      onChange={(e) => setScheduleDentist(e.target.value)}
+                    >
+                      {dentists.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.specialty})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">วันที่เข้าตรวจ</label>
+                    <input
+                      className="form-control"
+                      type="date"
+                      value={scheduleDate}
+                      onChange={(e) => setScheduleDate(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">เวลาเริ่มเข้าเวร</label>
+                    <input
+                      className="form-control"
+                      type="time"
+                      value={scheduleStartTime}
+                      onChange={(e) => setScheduleStartTime(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">เวลาสิ้นสุดเวร</label>
+                    <input
+                      className="form-control"
+                      type="time"
+                      value={scheduleEndTime}
+                      onChange={(e) => setScheduleEndTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ marginTop: '16px' }}
+                  disabled={submittingSchedule}
+                >
+                  {submittingSchedule ? 'กำลังสร้างรอบตรวจ...' : 'สร้างตารางเวรและแตกสร้างรอบเวลา 30 นาที'}
+                </button>
+              </form>
+
+              <h3 style={{ fontSize: '15.5px', fontWeight: 600, marginBottom: '14px' }}>ตารางเวรที่บันทึกแล้วในระบบ</h3>
+              {loadingAdminSchedules ? (
+                <div style={{ textAlign: 'center', padding: '30px' }}>กำลังโหลดตารางเวร...</div>
+              ) : adminSchedules.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>ยังไม่มีตารางเวรในระบบ</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {adminSchedules.map((s) => (
+                    <div
+                      key={s.id}
+                      style={{
+                        border: '1px solid var(--border)',
+                        borderRadius: '10px',
+                        padding: '14px 18px',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '10px',
+                        background: '#fff'
+                      }}
+                    >
+                      <div>
+                        <strong>{s.dentist?.name}</strong> ({s.dentist?.specialty})
+                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          วันที่: {new Date(s.workDate).toLocaleDateString('th-TH', { dateStyle: 'medium' })} | เวลา: {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                      <span className="badge badge-available">
+                        {s.slots ? s.slots.length : 0} ช่วงเวลาตรวจ
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* BOOKING MODAL */}
         {activeSlot && (
           <div className="modal-overlay">
@@ -954,6 +1355,58 @@ export default function App() {
                   disabled={submittingBooking}
                 >
                   {submittingBooking ? 'กำลังบันทึก...' : 'ยืนยันการจอง'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REJECT CONFLICT MODAL (BR-06) */}
+        {rejectModalApt && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '12px', color: 'var(--danger)' }}>
+                ระบุเหตุผลการปฏิเสธ / เวลาชนกัน (Conflict)
+              </h3>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+                เมื่อยืนยันปฏิเสธ สถานะนัดหมายจะเปลี่ยนเป็น <code style={{ fontWeight: 600, color: 'var(--danger)' }}>CANCELLED_CONFLICT</code> และระบบจะ<strong>ปลดล็อกช่วงเวลาตรวจคืนเป็น AVAILABLE</strong> ทันทีเพื่อให้คนไข้อื่นสามารถจองได้ (ตามกฎ BR-06)
+              </p>
+
+              <div style={{ background: '#f8faf9', padding: '12px 14px', borderRadius: '10px', marginBottom: '14px', fontSize: '13px', border: '1px solid #e7eee9' }}>
+                <div><strong>รหัสนัดหมาย:</strong> {rejectModalApt.appointmentCode}</div>
+                <div><strong>คนไข้:</strong> {rejectModalApt.customer?.fullName || 'คนไข้'}</div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">หมายเหตุเจ้าหน้าที่ (Staff Notes) *</label>
+                <textarea
+                  className="form-control"
+                  rows={3}
+                  value={staffRejectNotes}
+                  onChange={(e) => setStaffRejectNotes(e.target.value)}
+                  placeholder="เช่น ทันตแพทย์ติดเคสฉุกเฉิน หรือขอปรับเลื่อนเวลานัด"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setRejectModalApt(null)}
+                  disabled={updatingStatusId === rejectModalApt.id}
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  style={{ flex: 1 }}
+                  onClick={handleRejectAppointment}
+                  disabled={updatingStatusId === rejectModalApt.id}
+                >
+                  {updatingStatusId === rejectModalApt.id ? 'กำลังบันทึก...' : 'ยืนยันปฏิเสธนัดหมาย'}
                 </button>
               </div>
             </div>
