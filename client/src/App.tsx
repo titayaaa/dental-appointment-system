@@ -1128,6 +1128,10 @@ export default function App() {
         setMyAppointments(prev => [newApt, ...prev]);
         setAdminAppointments(prev => [newApt, ...prev]);
         setSlots(prev => prev.map(s => s.id === activeSlot.id ? { ...s, status: 'BOOKED' } : s));
+        setAdminSchedules(prev => prev.map(sched => ({
+          ...sched,
+          slots: sched.slots?.map((sl: TimeSlot) => sl.id === activeSlot.id ? { ...sl, status: 'BOOKED' } : sl)
+        })));
 
         setSuccessCode(code);
         setActiveSlot(null);
@@ -2313,6 +2317,13 @@ export default function App() {
                         const sDate = (s.workDate || '').split('T')[0];
                         return sDate === dStr;
                       });
+                      const dayAppointments = adminAppointments.filter(a => {
+                        const isCancelled = a.status === 'CANCELLED_CONFLICT' || a.status === 'CANCELLED_BY_CUSTOMER';
+                        if (isCancelled) return false;
+                        const aDate = a.timeSlot?.slotStart ? a.timeSlot.slotStart.split('T')[0] : (a.createdAt ? a.createdAt.split('T')[0] : '');
+                        const matchesSchedule = daySchedules.some(s => s.dentistId === a.dentistId && s.slots?.some((sl: TimeSlot) => sl.id === a.timeSlotId));
+                        return aDate === dStr || matchesSchedule;
+                      });
                       const isSelected = calendarSelectedDate === dStr;
 
                       return (
@@ -2339,19 +2350,36 @@ export default function App() {
                           <div style={{ fontSize: '16px', fontWeight: 700, margin: '4px 0', color: isSelected ? 'var(--primary)' : 'var(--text-main)' }}>
                             {dayNum}
                           </div>
-                          <span
-                            className="badge"
-                            style={{
-                              fontSize: '11px',
-                              padding: '2px 8px',
-                              background: daySchedules.length > 0 ? (isSelected ? 'var(--primary)' : 'var(--success-bg)') : '#f1f5f9',
-                              color: daySchedules.length > 0 ? (isSelected ? '#fff' : 'var(--success)') : 'var(--text-muted)',
-                            }}
-                          >
-                            {daySchedules.length > 0
-                              ? `${daySchedules.length} ${lang === 'th' ? 'เวรตรวจ' : 'shifts'}`
-                              : (lang === 'th' ? 'ไม่มีเวร' : 'Off')}
-                          </span>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'center' }}>
+                            <span
+                              className="badge"
+                              style={{
+                                fontSize: '10.5px',
+                                padding: '2px 7px',
+                                background: daySchedules.length > 0 ? (isSelected ? 'var(--primary)' : 'var(--success-bg)') : '#f1f5f9',
+                                color: daySchedules.length > 0 ? (isSelected ? '#fff' : 'var(--success)') : 'var(--text-muted)',
+                              }}
+                            >
+                              {daySchedules.length > 0
+                                ? `${daySchedules.length} ${lang === 'th' ? 'เวรตรวจ' : 'shifts'}`
+                                : (lang === 'th' ? 'ไม่มีเวร' : 'Off')}
+                            </span>
+                            {dayAppointments.length > 0 && (
+                              <span
+                                className="badge"
+                                style={{
+                                  fontSize: '10px',
+                                  padding: '1px 6px',
+                                  background: 'var(--pink-light)',
+                                  color: 'var(--pink-text)',
+                                  border: '1px solid var(--pink-border)',
+                                  fontWeight: 700
+                                }}
+                              >
+                                📌 {dayAppointments.length} {lang === 'th' ? 'มีนัดหมาย' : 'booked'}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -2392,62 +2420,158 @@ export default function App() {
                             const dName = lang === 'th' ? dentistObj?.name : dentistObj?.nameEn;
                             const dSpec = lang === 'th' ? dentistObj?.specialty : dentistObj?.specialtyEn;
 
+                            // Find all appointments for this doctor and this day/shift
+                            const shiftAppointments = adminAppointments.filter(a => {
+                              const isCancelled = a.status === 'CANCELLED_CONFLICT' || a.status === 'CANCELLED_BY_CUSTOMER';
+                              if (isCancelled) return false;
+                              const aDate = a.timeSlot?.slotStart ? a.timeSlot.slotStart.split('T')[0] : (a.createdAt ? a.createdAt.split('T')[0] : '');
+                              const matchesDentist = a.dentistId === s.dentistId;
+                              const matchesDate = aDate === calendarSelectedDate;
+                              const matchesSlot = s.slots?.some((sl: TimeSlot) => sl.id === a.timeSlotId);
+                              return matchesSlot || (matchesDentist && matchesDate);
+                            });
+
+                            const bookedSlotsCount = shiftAppointments.length;
+                            const totalSlotsCount = s.slots ? s.slots.length : 0;
+                            const availSlotsCount = Math.max(0, totalSlotsCount - bookedSlotsCount);
+
                             return (
                               <div
                                 key={s.id}
                                 style={{
                                   background: '#fff',
                                   border: '1px solid var(--border)',
-                                  borderRadius: '10px',
-                                  padding: '16px',
-                                  boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+                                  borderRadius: '12px',
+                                  padding: '18px',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
                                 }}
                               >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--pink-light)', color: 'var(--pink-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
+                                    <div style={{ width: 38, height: 38, borderRadius: '10px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '15px' }}>
                                       🩺
                                     </div>
                                     <div>
-                                      <strong style={{ fontSize: '14.5px', color: 'var(--text-main)' }}>{dName}</strong>
+                                      <strong style={{ fontSize: '15px', color: 'var(--text-main)' }}>{dName}</strong>
                                       <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dSpec}</div>
                                     </div>
                                   </div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                     <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                                       ⏰ {new Date(s.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                     <span className="badge badge-available">
-                                      {s.slots ? s.slots.length : 0} {t.slotCountSuffix}
+                                      {availSlotsCount}/{totalSlotsCount} {lang === 'th' ? 'รอบว่าง' : 'open'}
                                     </span>
+                                    {bookedSlotsCount > 0 && (
+                                      <span className="badge badge-pending" style={{ fontWeight: 700 }}>
+                                        📌 {bookedSlotsCount} {lang === 'th' ? 'มีนัดหมาย' : 'booked'}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
 
                                 {/* Slot Chips Matrix */}
                                 {s.slots && s.slots.length > 0 && (
-                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', paddingTop: '8px', borderTop: '1px dashed #e2e8f0' }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingTop: '10px', borderTop: '1px dashed #e2e8f0' }}>
                                     {s.slots.map((slot: TimeSlot) => {
-                                      const isAvail = slot.status === 'AVAILABLE';
+                                      const bookedApt = shiftAppointments.find(a => a.timeSlotId === slot.id || (
+                                        a.timeSlot?.slotStart && new Date(a.timeSlot.slotStart).getTime() === new Date(slot.slotStart).getTime()
+                                      ));
+                                      const isBooked = !!bookedApt || slot.status === 'BOOKED';
+                                      const isAvail = !isBooked;
                                       const tS = new Date(slot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                                       const tE = new Date(slot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                                       return (
-                                        <span
+                                        <div
                                           key={slot.id}
                                           style={{
-                                            fontSize: '11px',
-                                            padding: '4px 8px',
-                                            borderRadius: '6px',
-                                            background: isAvail ? '#f0fdf4' : '#f1f5f9',
-                                            color: isAvail ? '#166534' : '#64748b',
-                                            border: isAvail ? '1px solid #bbf7d0' : '1px solid #cbd5e1',
-                                            fontWeight: 500,
+                                            fontSize: '11.5px',
+                                            padding: '5px 10px',
+                                            borderRadius: '8px',
+                                            background: isAvail ? '#f0fdf4' : '#fdf2f5',
+                                            color: isAvail ? '#166534' : '#9d2b52',
+                                            border: isAvail ? '1px solid #bbf7d0' : '1px solid #f8ccd9',
+                                            fontWeight: 600,
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px'
                                           }}
                                         >
-                                          {tS} - {tE} {isAvail ? '✓' : '●'}
-                                        </span>
+                                          <span>{tS} - {tE}</span>
+                                          {isAvail ? (
+                                            <span style={{ fontSize: '10px', background: '#dcfce7', padding: '1px 5px', borderRadius: '4px' }}>
+                                              {lang === 'th' ? 'ว่าง' : 'Open'}
+                                            </span>
+                                          ) : (
+                                            <span style={{ fontSize: '10px', background: '#fce7f3', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                                              ● {bookedApt?.serviceType || (lang === 'th' ? 'จองแล้ว' : 'Booked')}
+                                              {bookedApt?.customer?.fullName ? ` (${bookedApt.customer.fullName.split(' ')[0]})` : ''}
+                                            </span>
+                                          )}
+                                        </div>
                                       );
                                     })}
+                                  </div>
+                                )}
+
+                                {/* Dedicated Appointments List on This Shift */}
+                                {shiftAppointments.length > 0 && (
+                                  <div style={{ marginTop: '14px', background: '#fdf4f7', border: '1px solid #f8ccd9', borderRadius: '10px', padding: '12px 14px' }}>
+                                    <div style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--pink-text)', marginBottom: '8px' }}>
+                                      📌 {lang === 'th' ? `รายการนัดหมายของคนไข้ในเวรนี้ (${shiftAppointments.length} คิว):` : `Patient Appointments for this shift (${shiftAppointments.length}):`}
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                      {shiftAppointments.map((apt) => {
+                                        const timeStr = apt.timeSlot?.slotStart
+                                          ? `${new Date(apt.timeSlot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(apt.timeSlot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                          : '09:00 - 09:30';
+                                        const isPending = apt.status === 'PENDING_REVIEW';
+
+                                        return (
+                                          <div
+                                            key={apt.id}
+                                            style={{
+                                              background: '#fff',
+                                              border: '1px solid #f2cfdb',
+                                              borderRadius: '8px',
+                                              padding: '10px 14px',
+                                              display: 'flex',
+                                              justifyContent: 'space-between',
+                                              alignItems: 'center',
+                                              flexWrap: 'wrap',
+                                              gap: '8px'
+                                            }}
+                                          >
+                                            <div>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--primary)' }}>{timeStr}</span>
+                                                <span className={`badge ${isPending ? 'badge-pending' : 'badge-confirmed'}`} style={{ fontSize: '11px', padding: '2px 8px' }}>
+                                                  {isPending ? t.statusPending : t.statusConfirmed}
+                                                </span>
+                                                <span style={{ fontWeight: 700, fontSize: '13px', color: 'var(--pink-text)' }}>
+                                                  🦷 {apt.serviceType}
+                                                </span>
+                                              </div>
+                                              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '3px' }}>
+                                                {t.patientLabel} <strong>{apt.customer?.fullName || (lang === 'th' ? 'คนไข้' : 'Patient')}</strong> {apt.customer?.phoneNumber ? `(${t.phoneLabel} ${apt.customer.phoneNumber})` : ''} | {t.apptCodeLabel} <code>{apt.appointmentCode}</code>
+                                              </div>
+                                            </div>
+                                            {isPending && (
+                                              <button
+                                                type="button"
+                                                className="btn btn-primary"
+                                                style={{ fontSize: '12px', padding: '5px 12px' }}
+                                                onClick={() => handleConfirmAppointment(apt.id)}
+                                              >
+                                                {t.confirmBtn}
+                                              </button>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
                                 )}
                               </div>
