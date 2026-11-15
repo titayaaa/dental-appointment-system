@@ -201,15 +201,31 @@ export const I18N = {
     bookingSub: 'เลือกรอบตรวจ 30 นาทีกับทันตแพทย์ผู้เชี่ยวชาญ ระบบจะบันทึกแบบ Atomic ป้องกันเวลาชนกัน (BR-01)',
     step1: '1. เลือกทันตแพทย์และวันที่',
     step2: '2. เลือกรอบเวลาว่าง (Available 30-min Slots)',
-    noSlots: 'ไม่พบรอบตรวจที่ว่างในวันที่เลือก กรุณาเลือกวันอื่นหรือทันตแพทย์ท่านอื่น',
-    slotAvailable: 'จองเวลานี้',
-    slotBooked: 'มีผู้จองแล้ว',
+    needCatalogCheck: 'ต้องการตรวจสอบรายละเอียดหัตถการ ระยะเวลา และอัตราค่าบริการประเมินก่อนจอง?',
+    openCatalogBtn: 'เปิดดูเมนูบริการและราคา (Service Catalog)',
+    searchSlotsTitle: 'ค้นหารอบเวลาตรวจของทันตแพทย์ (ช่วงเวลาละ 30 นาที)',
+    selectDentistLabel: 'เลือกทันตแพทย์',
+    selectDateLabel: 'เลือกวันที่ต้องการนัดหมาย',
+    slotsForDate: 'รอบเวลาตรวจประจำวันที่',
+    availableLegend: 'ว่าง (สามารถจองได้)',
+    bookedLegend: 'ไม่ว่าง',
+    loadingSlots: 'กำลังโหลดรอบเวลาตรวจ...',
+    noSlotsFound: 'ไม่พบตารางเวรหมอในวันที่เลือก กรุณาเลือกวันอื่น',
+    slotDuration: 'ระยะเวลาตรวจ 30 นาที',
+    bookThisSlot: 'จองเวลานี้',
+    alreadyBooked: 'มีผู้จองแล้ว',
     bookModalTitle: 'ยืนยันการจองเวลานัดหมาย',
     confirmBookBtn: 'ยืนยันการจอง',
     savingBooking: 'กำลังบันทึก...',
+    reasonPlaceholder: 'เช่น เสียวฟันกรามล่างขวา หรือต้องการตรวจเช็กฟันคุด',
+    reasonPlaceholderOther: 'โปรดระบุบริการทันตกรรม หรืออาการที่ต้องการปรึกษา/รักษา เช่น ผ่าฟันคุด, ฟอกสีฟัน, ปวดฟันกราม...',
+    optionalText: '(ถ้ามี)',
+    requiredText: '* (จำเป็นต้องระบุ)',
     // My Appointments
     myApptTitle: 'ประวัติและสถานะการนัดหมายของฉัน',
+    loadingAppts: 'กำลังโหลดข้อมูลนัดหมาย...',
     noMyAppt: 'ยังไม่มีรายการนัดหมายในระบบ',
+    bookNowBtn: 'จองเวลานัดตรวจฟัน',
     cancelApptBtn: 'ขอยกเลิกนัด',
     // Status text
     statusConfirmed: 'ยืนยันนัดหมายแล้ว',
@@ -277,15 +293,31 @@ export const I18N = {
     bookingSub: 'Select a 30-minute consultation slot. Atomic transaction prevents double-booking conflicts (BR-01).',
     step1: '1. Select Dentist & Date',
     step2: '2. Select Available 30-Min Slot',
-    noSlots: 'No available slots found for selected date and dentist. Please choose another date or provider.',
-    slotAvailable: 'Book Slot',
-    slotBooked: 'Reserved',
-    bookModalTitle: 'Confirm Appointment Booking',
+    needCatalogCheck: 'Want to review procedure details, duration, and estimated fees before booking?',
+    openCatalogBtn: 'Open Services & Pricing Catalog',
+    searchSlotsTitle: 'Find Dentist Consultation Slots (30-Min Intervals)',
+    selectDentistLabel: 'Select Dentist',
+    selectDateLabel: 'Select Appointment Date',
+    slotsForDate: 'Available Slots for',
+    availableLegend: 'Available (Bookable)',
+    bookedLegend: 'Booked',
+    loadingSlots: 'Loading available time slots...',
+    noSlotsFound: 'No available slots found for the selected date. Please choose another date or provider.',
+    slotDuration: '30-minute consultation',
+    bookThisSlot: 'Book This Slot',
+    alreadyBooked: 'Reserved',
+    bookModalTitle: 'Confirm Dental Appointment Booking',
     confirmBookBtn: 'Confirm Booking',
-    savingBooking: 'Saving booking...',
+    savingBooking: 'Submitting booking...',
+    reasonPlaceholder: 'e.g. Tooth sensitivity in lower molar, or annual checkup',
+    reasonPlaceholderOther: 'Please describe your symptoms or requested dental treatment...',
+    optionalText: '(Optional)',
+    requiredText: '* (Required)',
     // My Appointments
     myApptTitle: 'My Appointment History & Status',
+    loadingAppts: 'Loading your appointments...',
     noMyAppt: 'No appointments found in the system.',
+    bookNowBtn: 'Book an Appointment Now',
     cancelApptBtn: 'Cancel Appointment',
     // Status text
     statusConfirmed: 'Confirmed',
@@ -293,6 +325,15 @@ export const I18N = {
     statusConflict: 'Cancelled (Conflict)',
     statusCancelledCust: 'Cancelled by Patient',
   },
+};
+
+export const getDentistDisplayName = (d?: { id: string; name: string; specialty: string }, lang: Language = 'th') => {
+  if (!d) return { name: '', specialty: '' };
+  if (lang === 'en') {
+    if (d.id === 'dentist-somchai') return { name: 'Dr. Somchai Jaidee, D.D.S.', specialty: 'General Dentistry & Oral Surgery' };
+    if (d.id === 'dentist-suda') return { name: 'Dr. Suda Rakfun, D.D.S.', specialty: 'Orthodontics & Aesthetic Dentistry' };
+  }
+  return { name: d.name, specialty: d.specialty };
 };
 
 export default function App() {
@@ -1171,40 +1212,43 @@ export default function App() {
                 gap: '10px'
               }}>
                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                  ต้องการตรวจสอบรายละเอียดหัตถการ ระยะเวลา และอัตราค่าบริการประเมินก่อนจอง?
+                  {t.needCatalogCheck}
                 </span>
                 <button
                   className="btn btn-secondary"
                   style={{ fontSize: '12px', padding: '6px 14px', color: 'var(--primary)', fontWeight: 600 }}
                   onClick={() => setCurrentView('services')}
                 >
-                  เปิดดูเมนูบริการและราคา (Service Catalog)
+                  {t.openCatalogBtn}
                 </button>
               </div>
             )}
 
             <div className="card">
               <h2 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '16px', letterSpacing: '-0.2px' }}>
-                ค้นหารอบเวลาตรวจของทันตแพทย์ (ช่วงเวลาละ 30 นาที)
+                {t.searchSlotsTitle}
               </h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
                 <div className="form-group">
-                  <label className="form-label">เลือกทันตแพทย์</label>
+                  <label className="form-label">{t.selectDentistLabel}</label>
                   <select
                     className="form-control"
                     value={selectedDentist}
                     onChange={(e) => setSelectedDentist(e.target.value)}
                   >
-                    {dentists.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name} ({d.specialty})
-                      </option>
-                    ))}
+                    {dentists.map((d) => {
+                      const dentistInfo = getDentistDisplayName(d, lang);
+                      return (
+                        <option key={d.id} value={d.id}>
+                          {dentistInfo.name} ({dentistInfo.specialty})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">เลือกวันที่ต้องการนัดหมาย</label>
+                  <label className="form-label">{t.selectDateLabel}</label>
                   <input
                     className="form-control"
                     type="date"
@@ -1219,22 +1263,22 @@ export default function App() {
             {/* Slots Grid */}
             <div className="card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3 style={{ fontSize: '15.5px', fontWeight: 600 }}>รอบเวลาตรวจประจำวันที่ {selectedDate}</h3>
+                <h3 style={{ fontSize: '15.5px', fontWeight: 600 }}>{t.slotsForDate} {selectedDate}</h3>
                 <div style={{ display: 'flex', gap: '14px', fontSize: '12.5px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: 8, height: 8, background: 'var(--success)', borderRadius: '50%' }}></span> ว่าง (สามารถจองได้)
+                    <span style={{ width: 8, height: 8, background: 'var(--success)', borderRadius: '50%' }}></span> {t.availableLegend}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: 8, height: 8, background: '#cbd5e1', borderRadius: '50%' }}></span> ไม่ว่าง
+                    <span style={{ width: 8, height: 8, background: '#cbd5e1', borderRadius: '50%' }}></span> {t.bookedLegend}
                   </span>
                 </div>
               </div>
 
               {slotsLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>กำลังโหลดรอบเวลาตรวจ...</div>
+                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>{t.loadingSlots}</div>
               ) : slots.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                  ไม่พบตารางเวรหมอในวันที่เลือก กรุณาเลือกวันอื่น
+                  {t.noSlotsFound}
                 </div>
               ) : (
                 <div className="slot-grid">
@@ -1249,7 +1293,7 @@ export default function App() {
                           {timeStart} - {timeEnd}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', margin: '6px 0 10px' }}>
-                          ระยะเวลาตรวจ 30 นาที
+                          {t.slotDuration}
                         </div>
                         {isAvail ? (
                           <button
@@ -1260,11 +1304,11 @@ export default function App() {
                               setConflictError(null);
                             }}
                           >
-                            จองเวลานี้
+                            {t.bookThisSlot}
                           </button>
                         ) : (
                           <span className="badge badge-booked" style={{ fontSize: '11.5px', width: '100%', justifyContent: 'center' }}>
-                            มีผู้จองแล้ว
+                            {t.alreadyBooked}
                           </span>
                         )}
                       </div>
@@ -1279,14 +1323,14 @@ export default function App() {
         {/* VIEW 2: MY APPOINTMENTS */}
         {currentView === 'my-appointments' && (
           <div className="card">
-            <h2 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '16px' }}>ประวัติและสถานะการนัดหมายของฉัน</h2>
+            <h2 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '16px' }}>{t.myApptTitle}</h2>
             {loadingAppointments ? (
-              <div style={{ textAlign: 'center', padding: '40px' }}>กำลังโหลดข้อมูลนัดหมาย...</div>
+              <div style={{ textAlign: 'center', padding: '40px' }}>{t.loadingAppts}</div>
             ) : myAppointments.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
-                <p style={{ marginTop: '10px' }}>ยังไม่มีรายการนัดหมายในระบบ</p>
+                <p style={{ marginTop: '10px' }}>{t.noMyAppt}</p>
                 <button className="btn btn-primary" style={{ marginTop: '14px' }} onClick={() => setCurrentView('booking')}>
-                  จองเวลานัดตรวจฟัน
+                  {t.bookNowBtn}
                 </button>
               </div>
             ) : (
@@ -1297,9 +1341,11 @@ export default function App() {
                     apt.status === 'PENDING_REVIEW' ? 'badge-pending' : 'badge-cancelled';
 
                   const statusText =
-                    apt.status === 'CONFIRMED' ? 'ยืนยันนัดหมายแล้ว' :
-                    apt.status === 'PENDING_REVIEW' ? 'รอยืนยันจากคลินิก' :
-                    apt.status === 'CANCELLED_CONFLICT' ? 'ยกเลิกเนื่องจากเวลาชนกัน' : 'ยกเลิกโดยคนไข้';
+                    apt.status === 'CONFIRMED' ? t.statusConfirmed :
+                    apt.status === 'PENDING_REVIEW' ? t.statusPending :
+                    apt.status === 'CANCELLED_CONFLICT' ? t.statusConflict : t.statusCancelledCust;
+
+                  const dentistInfo = getDentistDisplayName(apt.dentist, lang);
 
                   return (
                     <div
@@ -1325,11 +1371,11 @@ export default function App() {
                           </span>
                         </div>
                         <div style={{ fontSize: '13.5px', color: 'var(--text-main)' }}>
-                          <strong>ทันตแพทย์:</strong> {apt.dentist?.name || 'ทพ.สมชาย ใจดี'} | <strong>บริการ:</strong> {apt.serviceType}
+                          <strong>{t.dentistLabel}:</strong> {dentistInfo.name || 'Dr. Somchai Jaidee'} | <strong>{t.serviceLabel}:</strong> {apt.serviceType}
                         </div>
                         {apt.reasonForVisit && (
                           <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            อาการเบื้องต้น: {apt.reasonForVisit}
+                            {t.reasonLabel}: {apt.reasonForVisit}
                           </div>
                         )}
                       </div>
@@ -1340,7 +1386,7 @@ export default function App() {
                           style={{ fontSize: '12.5px', padding: '6px 14px' }}
                           onClick={() => handleCancel(apt.id)}
                         >
-                          ขอยกเลิกนัด
+                          {t.cancelApptBtn}
                         </button>
                       )}
                     </div>
@@ -1610,7 +1656,7 @@ export default function App() {
           <div className="modal-overlay">
             <div className="modal-content">
               <h3 style={{ fontSize: '17px', fontWeight: 600, marginBottom: '14px', letterSpacing: '-0.2px' }}>
-                ยืนยันการจองเวลานัดหมาย
+                {t.bookModalTitle}
               </h3>
 
               {conflictError && (
@@ -1620,13 +1666,13 @@ export default function App() {
               )}
 
               <div style={{ background: '#f8faf9', padding: '14px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '13.5px', border: '1px solid #e7eee9' }}>
-                <div><strong>ทันตแพทย์:</strong> {dentists.find(d => d.id === selectedDentist)?.name}</div>
-                <div><strong>วันที่นัดหมาย:</strong> {selectedDate}</div>
-                <div><strong>ช่วงเวลา:</strong> {new Date(activeSlot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSlot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                <div><strong>{t.dentistLabel}:</strong> {getDentistDisplayName(dentists.find(d => d.id === selectedDentist) || dentists[0], lang).name}</div>
+                <div><strong>{t.workDate}:</strong> {selectedDate}</div>
+                <div><strong>{t.slotTimeLabel}:</strong> {new Date(activeSlot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSlot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
 
               <div className="form-group">
-                <label className="form-label">ประเภทบริการทำฟัน</label>
+                <label className="form-label">{t.serviceLabel}</label>
                 <select
                   className="form-control"
                   value={serviceType}
@@ -1640,15 +1686,15 @@ export default function App() {
 
               <div className="form-group">
                 <label className="form-label">
-                  อาการเบื้องต้น / ข้อมูลเพิ่มเติม {serviceType.includes('อื่นๆ') ? <span style={{ color: 'var(--danger)', fontWeight: 600 }}>* (จำเป็นต้องระบุ)</span> : '(ถ้ามี)'}
+                  {t.reasonLabel} {serviceType.includes('อื่นๆ') ? <span style={{ color: 'var(--danger)', fontWeight: 600 }}>{t.requiredText}</span> : t.optionalText}
                 </label>
                 <textarea
                   className="form-control"
                   rows={3}
                   placeholder={
                     serviceType.includes('อื่นๆ')
-                      ? 'โปรดระบุบริการทันตกรรม หรืออาการที่ต้องการปรึกษา/รักษา เช่น ผ่าฟันคุด, ฟอกสีฟัน, ปวดฟันกราม...'
-                      : 'เช่น เสียวฟันกรามล่างขวา หรือต้องการตรวจเช็กฟันคุด'
+                      ? t.reasonPlaceholderOther
+                      : t.reasonPlaceholder
                   }
                   value={reasonForVisit}
                   onChange={(e) => setReasonForVisit(e.target.value)}
@@ -1666,7 +1712,7 @@ export default function App() {
                   }}
                   disabled={submittingBooking}
                 >
-                  ยกเลิก
+                  {t.cancelBtn}
                 </button>
                 <button
                   type="button"
@@ -1675,7 +1721,7 @@ export default function App() {
                   onClick={handleBookSlot}
                   disabled={submittingBooking}
                 >
-                  {submittingBooking ? 'กำลังบันทึก...' : 'ยืนยันการจอง'}
+                  {submittingBooking ? t.savingBooking : t.confirmBookBtn}
                 </button>
               </div>
             </div>
