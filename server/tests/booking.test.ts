@@ -269,5 +269,170 @@ describe('Feature F-02: Patient Slot Discovery & Booking Integration Tests', () 
       expect(res.body.data.appointmentCode).toBe('APT-202611-002');
       expect(res.body.data.status).toBe('PENDING_REVIEW');
     });
+
+    it('should reject with 400 when time slot does not belong to the requested dentist', async () => {
+      const futureStart = new Date(Date.now() + 86400000);
+      const futureEnd = new Date(futureStart.getTime() + 1800000);
+
+      vi.spyOn(prisma.timeSlot, 'findUnique').mockResolvedValue({
+        id: mockSlotId,
+        scheduleId: 'sched-1',
+        slotStart: futureStart,
+        slotEnd: futureEnd,
+        status: SlotStatus.AVAILABLE,
+        schedule: {
+          dentistId: 'different-dentist-uuid',
+        },
+      } as any);
+
+      const res = await request(app)
+        .post('/api/appointments')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({
+          dentistId: mockDentistId,
+          timeSlotId: mockSlotId,
+          serviceType: 'ขูดหินปูน',
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Target time slot does not belong to the specified dentist');
+    });
+  });
+
+  describe('GET /api/dentists', () => {
+    it('should return list of active dentists with 200 OK', async () => {
+      const mockDentists = [
+        { id: 'dentist-somchai', name: 'ทพ.สมชาย ใจดี', specialty: 'ทันตกรรมทั่วไป' },
+        { id: 'dentist-suda', name: 'ทพญ.สุดา รักฟัน', specialty: 'ทันตกรรมจัดฟัน' },
+      ];
+
+      vi.spyOn(prisma.dentist, 'findMany').mockResolvedValue(mockDentists as any);
+
+      const res = await request(app).get('/api/dentists');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(2);
+      expect(res.body.data[0].name).toBe('ทพ.สมชาย ใจดี');
+    });
+  });
+
+  describe('GET /api/my-appointments (TEST-CUST-05 / BR-04 Data Privacy)', () => {
+    it('should reject with 401 when Authorization header is missing', async () => {
+      const res = await request(app).get('/api/my-appointments');
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject with 403 when user is STAFF (customer role required)', async () => {
+      const res = await request(app)
+        .get('/api/my-appointments')
+        .set('Authorization', `Bearer ${staffToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('TEST-CUST-05: should return only appointments belonging to the authenticated customer', async () => {
+      const customerAppointments = [
+        {
+          id: 'apt-1',
+          appointmentCode: 'APT-001',
+          customerId: customerUser.id,
+          dentistId: mockDentistId,
+          timeSlotId: mockSlotId,
+          serviceType: 'ขูดหินปูน',
+          status: AppointmentStatus.PENDING_REVIEW,
+          dentist: { name: 'ทพ.สมชาย ใจดี', specialty: 'ทันตกรรมทั่วไป' },
+          timeSlot: { slotStart: new Date(), slotEnd: new Date() },
+        },
+      ];
+
+      vi.spyOn(prisma.appointment, 'findMany').mockResolvedValue(customerAppointments as any);
+
+      const res = await request(app)
+        .get('/api/my-appointments')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveLength(1);
+      expect(res.body.data[0].customerId).toBe(customerUser.id);
+    });
+  });
+
+  describe('PATCH /api/my-appointments/:id/cancel (TEST-CUST-06 / BR-06 Lifecycle & State Transition)', () => {
+    it('should reject with 401 when Authorization header is missing', async () => {
+      const res = await request(app).patch('/api/my-appointments/apt-1/cancel');
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject with 404 when appointment does not exist', async () => {
+      vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue(null);
+
+      const res = await request(app)
+        .patch('/api/my-appointments/apt-non-existent/cancel')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Appointment record does not exist');
+    });
+
+    it('should reject with 403 when customer tries to cancel someone else appointment (BR-04)', async () => {
+      vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue({
+        id: 'apt-other',
+        customerId: 'different-customer-id',
+        status: AppointmentStatus.PENDING_REVIEW,
+      } as any);
+
+      const res = await request(app)
+        .patch('/api/my-appointments/apt-other/cancel')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('You are not authorized to cancel this appointment');
+    });
+
+    it('should reject with 400 when appointment is already COMPLETED or CANCELLED (State Transition Guard)', async () => {
+      vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue({
+        id: 'apt-completed',
+        customerId: customerUser.id,
+        status: AppointmentStatus.COMPLETED,
+      } as any);
+
+      const res = await request(app)
+        .patch('/api/my-appointments/apt-completed/cancel')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Cannot cancel an appointment that is already completed or cancelled');
+    });
+
+    it('TEST-CUST-06: should atomically cancel appointment and release time slot back to AVAILABLE', async () => {
+      vi.spyOn(prisma.appointment, 'findUnique').mockResolvedValue({
+        id: 'apt-valid',
+        customerId: customerUser.id,
+        timeSlotId: mockSlotId,
+        status: AppointmentStatus.PENDING_REVIEW,
+      } as any);
+
+      vi.spyOn(prisma, '$transaction').mockResolvedValue([
+        { id: 'apt-valid', status: AppointmentStatus.CANCELLED_BY_CUSTOMER },
+        { id: mockSlotId, status: SlotStatus.AVAILABLE },
+      ] as any);
+
+      const res = await request(app)
+        .patch('/api/my-appointments/apt-valid/cancel')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.message).toContain('Appointment cancelled successfully');
+    });
   });
 });

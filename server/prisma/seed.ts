@@ -55,9 +55,10 @@ async function main() {
   - Customer 2: ${customer2.email} (Role: CUSTOMER)
   (All accounts use password: "password123")`);
 
-  // 4. Create Dentists
+  // 4. Create Dentists (using deterministic IDs matching frontend discovery)
   const dentist1 = await prisma.dentist.create({
     data: {
+      id: 'dentist-somchai',
       name: 'ทพ.สมชาย ใจดี',
       specialty: 'ทันตกรรมทั่วไป',
       isActive: true,
@@ -66,6 +67,7 @@ async function main() {
 
   const dentist2 = await prisma.dentist.create({
     data: {
+      id: 'dentist-suda',
       name: 'ทพญ.สุดา รักฟัน',
       specialty: 'ทันตกรรมจัดฟัน',
       isActive: true,

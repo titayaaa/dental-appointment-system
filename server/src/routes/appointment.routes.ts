@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Role } from '@prisma/client';
 import {
+  getDentists,
   getAvailableSlots,
   bookAppointment,
   getMyAppointments,
@@ -9,6 +10,9 @@ import {
 import { requireAuth, requireRole } from '../middlewares/auth.middleware';
 
 const router = Router();
+
+// Dentists listing
+router.get('/dentists', getDentists);
 
 // Available slots query (Logged in users: Customer or Staff)
 router.get('/slots/available', requireAuth, getAvailableSlots);

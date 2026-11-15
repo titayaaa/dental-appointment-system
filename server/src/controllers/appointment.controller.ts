@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Role, SlotStatus, AppointmentStatus, Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { AuthenticatedRequest } from '../types/auth.types';
@@ -10,6 +10,35 @@ function generateAppointmentCode(): string {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.floor(100 + Math.random() * 900);
   return `APT-${timestamp}-${random}`;
+}
+
+/**
+ * GET /api/dentists
+ * Query active dentists for client appointment booking
+ */
+export async function getDentists(req: Request, res: Response): Promise<void> {
+  try {
+    const dentists = await prisma.dentist.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        name: true,
+        specialty: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: dentists,
+    });
+  } catch (error) {
+    console.error('Error in getDentists:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal Server Error: Unable to query dentists',
+    });
+  }
 }
 
 /**
@@ -121,15 +150,25 @@ export async function bookAppointment(req: AuthenticatedRequest, res: Response):
       return;
     }
 
-    // 1. Check slot existence and current status
+    // 1. Check slot existence, current status, and dentist ownership
     const targetSlot = await prisma.timeSlot.findUnique({
       where: { id: timeSlotId },
+      include: { schedule: true },
     });
 
     if (!targetSlot) {
       res.status(404).json({
         success: false,
         error: 'Not Found: Target time slot does not exist',
+      });
+      return;
+    }
+
+    // Data Integrity Guard: Ensure the slot belongs to the requested dentist
+    if (targetSlot.schedule && targetSlot.schedule.dentistId !== dentistId) {
+      res.status(400).json({
+        success: false,
+        error: 'Bad Request: Target time slot does not belong to the specified dentist',
       });
       return;
     }
@@ -311,6 +350,18 @@ export async function cancelMyAppointment(req: AuthenticatedRequest, res: Respon
       res.status(403).json({
         success: false,
         error: 'Forbidden: You are not authorized to cancel this appointment',
+      });
+      return;
+    }
+
+    // State Transition Guard: Cannot cancel appointment that is already completed or cancelled
+    if (
+      appointment.status !== AppointmentStatus.PENDING_REVIEW &&
+      appointment.status !== AppointmentStatus.CONFIRMED
+    ) {
+      res.status(400).json({
+        success: false,
+        error: 'Bad Request: Cannot cancel an appointment that is already completed or cancelled',
       });
       return;
     }

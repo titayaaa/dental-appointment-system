@@ -94,6 +94,11 @@ export const api = {
     }
   },
 
+  // Dentists
+  getDentists: async () => {
+    return request<{ success: boolean; data: { id: string; name: string; specialty: string }[] }>('/api/dentists');
+  },
+
   // Slots
   getAvailableSlots: async (dentistId: string, date: string) => {
     return request<{ success: boolean; data: TimeSlot[] }>(`/api/slots/available?dentistId=${dentistId}&date=${date}`);

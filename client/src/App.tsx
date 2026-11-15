@@ -17,7 +17,7 @@ export const CLINIC_OPTIONS: ClinicBrand[] = [
   { id: 'smilesync', name: 'SmileSync Dental Clinic', tagline: 'Clinical Precision & Scheduling', shortName: 'SS' },
 ];
 
-const DENTISTS = [
+const DEFAULT_DENTISTS = [
   { id: 'dentist-somchai', name: 'ทพ.สมชาย ใจดี', specialty: 'ทันตกรรมทั่วไปและทันตศัลยศาสตร์' },
   { id: 'dentist-suda', name: 'ทพญ.สุดา รักฟัน', specialty: 'ทันตกรรมจัดฟันและทันตกรรมเพื่อความงาม' },
 ];
@@ -155,7 +155,8 @@ export default function App() {
   const [authLoading, setAuthLoading] = useState(false);
 
   // Booking state
-  const [selectedDentist, setSelectedDentist] = useState(DENTISTS[0].id);
+  const [dentists, setDentists] = useState(DEFAULT_DENTISTS);
+  const [selectedDentist, setSelectedDentist] = useState(DEFAULT_DENTISTS[0].id);
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(tomorrowStr);
   const [slots, setSlots] = useState<TimeSlot[]>([]);
@@ -172,6 +173,20 @@ export default function App() {
   // My Appointments state
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
+
+  // Load dentists dynamically from API on mount
+  useEffect(() => {
+    api.getDentists()
+      .then((res) => {
+        if (res.data && res.data.length > 0) {
+          setDentists(res.data);
+          if (!res.data.some((d) => d.id === selectedDentist)) {
+            setSelectedDentist(res.data[0].id);
+          }
+        }
+      })
+      .catch((err) => console.warn('Using default dentists fallback list:', err));
+  }, []);
 
   // Check auth session on mount
   useEffect(() => {
@@ -297,6 +312,7 @@ export default function App() {
     } catch (err: any) {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('longer available')) {
         setConflictError('ข้อขัดแย้ง (HTTP 409 Conflict): รอบเวลานี้เพิ่งมีผู้ป่วยท่านอื่นจองไป กรุณาเลือกรอบเวลาใหม่');
+        loadSlots(); // Auto-refresh background slots on 409 conflict
       } else {
         setConflictError(err.message || 'การจองล้มเหลว กรุณาลองใหม่อีกครั้ง');
       }
@@ -574,7 +590,7 @@ export default function App() {
             {/* Catalog Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
               {filteredProcedures.map((proc) => {
-                const dentist = DENTISTS.find(d => d.id === proc.recommendedDentistId);
+                const dentist = dentists.find(d => d.id === proc.recommendedDentistId);
                 return (
                   <div
                     key={proc.id}
@@ -654,7 +670,7 @@ export default function App() {
                 gap: '10px'
               }}>
                 <div style={{ fontSize: '13.5px', color: 'var(--pink-text)' }}>
-                  <strong>บริการที่เลือก:</strong> {selectedServiceNotice} (ทันตแพทย์: <strong>{DENTISTS.find(d => d.id === selectedDentist)?.name}</strong>) — กรุณาเลือกรอบเวลาที่ต้องการด้านล่าง
+                  <strong>บริการที่เลือก:</strong> {selectedServiceNotice} (ทันตแพทย์: <strong>{dentists.find(d => d.id === selectedDentist)?.name}</strong>) — กรุณาเลือกรอบเวลาที่ต้องการด้านล่าง
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
@@ -711,7 +727,7 @@ export default function App() {
                     value={selectedDentist}
                     onChange={(e) => setSelectedDentist(e.target.value)}
                   >
-                    {DENTISTS.map((d) => (
+                    {dentists.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name} ({d.specialty})
                       </option>
@@ -882,7 +898,7 @@ export default function App() {
               )}
 
               <div style={{ background: '#f8faf9', padding: '14px 16px', borderRadius: '10px', marginBottom: '16px', fontSize: '13.5px', border: '1px solid #e7eee9' }}>
-                <div><strong>ทันตแพทย์:</strong> {DENTISTS.find(d => d.id === selectedDentist)?.name}</div>
+                <div><strong>ทันตแพทย์:</strong> {dentists.find(d => d.id === selectedDentist)?.name}</div>
                 <div><strong>วันที่นัดหมาย:</strong> {selectedDate}</div>
                 <div><strong>ช่วงเวลา:</strong> {new Date(activeSlot.slotStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(activeSlot.slotEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
