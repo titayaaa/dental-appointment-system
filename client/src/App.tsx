@@ -138,8 +138,209 @@ export const DENTAL_SERVICES_CATALOG: DentalProcedure[] = [
 
 const SERVICES = DENTAL_SERVICES_CATALOG.map((s) => s.name);
 
+export type Language = 'th' | 'en';
+
+export const I18N = {
+  th: {
+    clinicTitle: 'SmileSync คลินิกทันตกรรม',
+    tagline: 'ระบบจัดตารางเวลาและนัดหมายคลินิกทันตกรรม',
+    signInHeader: 'เข้าสู่ระบบบัญชี SmileSync',
+    emailLabel: 'อีเมลบัญชีผู้ใช้',
+    passwordLabel: 'รหัสผ่าน',
+    signInBtn: 'เข้าสู่ระบบ',
+    signingIn: 'กำลังเข้าสู่ระบบ...',
+    quickLoginTitle: 'เลือกบัญชีทดสอบด่วน (Sprint 1 Seeded Accounts):',
+    quickCust1: 'เข้าสู่ระบบ: คนไข้ 1 (customer1@test.com)',
+    quickCust2: 'เข้าสู่ระบบ: คนไข้ 2 (customer2@test.com)',
+    quickStaff: 'เข้าสู่ระบบ: เจ้าหน้าที่คลินิก (staff@clinic.com)',
+    logoutBtn: 'ออกจากระบบ',
+    staffBadge: 'เจ้าหน้าที่คลินิก',
+    customerBadge: 'คนไข้',
+    // Nav tabs
+    tabCatalog: 'เมนูบริการและราคา (Catalog)',
+    tabBooking: 'จองเวลานัดหมาย (Booking)',
+    tabMyAppointments: 'นัดหมายของฉัน (My Appointments)',
+    tabStaffDashboard: 'จัดการนัดหมายทั้งหมด (Staff Dashboard)',
+    tabStaffPlanner: 'วางแผนตารางเวรหมอ (Schedule Planner)',
+    tabCustomerView: 'มุมมองจองคิวคนไข้ (Customer Booking)',
+    // Staff Dashboard
+    staffDashboardTitle: 'แดชบอร์ดจัดการคิวนัดหมาย (Staff Master Dashboard)',
+    staffDashboardSub: 'ตรวจสอบคำขอนัดหมาย ยืนยันคิว และจัดการเวลาชนกัน (BR-05, BR-06)',
+    refreshBtn: 'รีเฟรชข้อมูล',
+    filterAll: 'ทั้งหมด',
+    filterPending: 'รอยืนยัน (Pending)',
+    filterConfirmed: 'ยืนยันแล้ว (Confirmed)',
+    filterConflict: 'เวลาชนกัน (Conflict)',
+    filterCancelledCust: 'คนไข้ยกเลิก',
+    patientLabel: 'คนไข้',
+    phoneLabel: 'โทร',
+    dentistLabel: 'ทันตแพทย์',
+    serviceLabel: 'บริการ',
+    slotTimeLabel: 'รอบเวลา',
+    reasonLabel: 'อาการ/ข้อมูลเพิ่มเติม',
+    staffNotesLabel: 'หมายเหตุเจ้าหน้าที่',
+    confirmBtn: 'ยืนยันนัดหมาย',
+    rejectConflictBtn: 'ปฏิเสธ (เวลาชนกัน)',
+    rejectModalTitle: 'ระบุเหตุผลการปฏิเสธ / เวลาชนกัน (Conflict)',
+    rejectModalDesc: 'เมื่อยืนยันปฏิเสธ สถานะนัดหมายจะเปลี่ยนเป็น CANCELLED_CONFLICT และระบบจะปลดล็อกช่วงเวลาตรวจคืนเป็น AVAILABLE ทันทีเพื่อให้คนไข้อื่นสามารถจองได้ (ตามกฎ BR-06)',
+    confirmRejectBtn: 'ยืนยันปฏิเสธนัดหมาย',
+    cancelBtn: 'ยกเลิก',
+    // Schedule Planner
+    plannerTitle: 'วางแผนและสร้างตารางเวรทันตแพทย์ (Dentist Schedule Planner)',
+    plannerSub: 'กำหนดวันเวลาเข้าเวรของทันตแพทย์ ระบบจะคำนวณและแตกสร้างรอบเวลาว่าง (Available Slots) ละ 30 นาทีให้อัตโนมัติ (FR-02)',
+    selectDentist: 'เลือกทันตแพทย์',
+    workDate: 'วันที่เข้าตรวจ',
+    shiftStart: 'เวลาเริ่มเข้าเวร',
+    shiftEnd: 'เวลาสิ้นสุดเวร',
+    generateSlotsBtn: 'สร้างตารางเวรและแตกสร้างรอบเวลา 30 นาที',
+    generatingSlots: 'กำลังสร้างรอบตรวจ...',
+    existingRosters: 'ตารางเวรที่บันทึกแล้วในระบบ',
+    slotsCountBadge: 'ช่วงเวลาตรวจ',
+    // Customer Booking
+    bookingTitle: 'จองเวลานัดตรวจทันตกรรม',
+    bookingSub: 'เลือกรอบตรวจ 30 นาทีกับทันตแพทย์ผู้เชี่ยวชาญ ระบบจะบันทึกแบบ Atomic ป้องกันเวลาชนกัน (BR-01)',
+    step1: '1. เลือกทันตแพทย์และวันที่',
+    step2: '2. เลือกรอบเวลาว่าง (Available 30-min Slots)',
+    noSlots: 'ไม่พบรอบตรวจที่ว่างในวันที่เลือก กรุณาเลือกวันอื่นหรือทันตแพทย์ท่านอื่น',
+    slotAvailable: 'จองเวลานี้',
+    slotBooked: 'มีผู้จองแล้ว',
+    bookModalTitle: 'ยืนยันการจองเวลานัดหมาย',
+    confirmBookBtn: 'ยืนยันการจอง',
+    savingBooking: 'กำลังบันทึก...',
+    // My Appointments
+    myApptTitle: 'ประวัติและสถานะการนัดหมายของฉัน',
+    noMyAppt: 'ยังไม่มีรายการนัดหมายในระบบ',
+    cancelApptBtn: 'ขอยกเลิกนัด',
+    // Status text
+    statusConfirmed: 'ยืนยันนัดหมายแล้ว',
+    statusPending: 'รอยืนยันจากคลินิก',
+    statusConflict: 'ยกเลิกเนื่องจากเวลาชนกัน',
+    statusCancelledCust: 'ยกเลิกโดยคนไข้',
+  },
+  en: {
+    clinicTitle: 'SmileSync Dental Clinic',
+    tagline: 'Clinical Precision & Appointment Scheduling System',
+    signInHeader: 'Sign in to SmileSync',
+    emailLabel: 'Email Address',
+    passwordLabel: 'Password',
+    signInBtn: 'Sign In',
+    signingIn: 'Signing in...',
+    quickLoginTitle: 'Quick Demo Accounts (Sprint 1 Seeded Accounts):',
+    quickCust1: 'Sign in as: Patient 1 (customer1@test.com)',
+    quickCust2: 'Sign in as: Patient 2 (customer2@test.com)',
+    quickStaff: 'Sign in as: Clinic Staff (staff@clinic.com)',
+    logoutBtn: 'Log out',
+    staffBadge: 'Clinic Staff',
+    customerBadge: 'Patient',
+    // Nav tabs
+    tabCatalog: 'Services & Pricing',
+    tabBooking: 'Book Appointment',
+    tabMyAppointments: 'My Appointments',
+    tabStaffDashboard: 'Staff Master Dashboard',
+    tabStaffPlanner: 'Schedule Planner',
+    tabCustomerView: 'Customer Booking View',
+    // Staff Dashboard
+    staffDashboardTitle: 'Staff Master Appointment Dashboard',
+    staffDashboardSub: 'Review appointments, confirm bookings, and manage schedule conflicts (BR-05, BR-06)',
+    refreshBtn: 'Refresh',
+    filterAll: 'All',
+    filterPending: 'Pending Review',
+    filterConfirmed: 'Confirmed',
+    filterConflict: 'Conflict Cancelled',
+    filterCancelledCust: 'Patient Cancelled',
+    patientLabel: 'Patient',
+    phoneLabel: 'Phone',
+    dentistLabel: 'Dentist',
+    serviceLabel: 'Service',
+    slotTimeLabel: 'Time Slot',
+    reasonLabel: 'Symptoms / Details',
+    staffNotesLabel: 'Staff Notes',
+    confirmBtn: 'Confirm Appointment',
+    rejectConflictBtn: 'Reject (Conflict)',
+    rejectModalTitle: 'Reason for Rejection / Schedule Conflict',
+    rejectModalDesc: 'Upon confirmation, status changes to CANCELLED_CONFLICT and the time slot is atomically released back to AVAILABLE (BR-06).',
+    confirmRejectBtn: 'Confirm Rejection',
+    cancelBtn: 'Cancel',
+    // Schedule Planner
+    plannerTitle: 'Dentist Schedule Planner',
+    plannerSub: 'Configure provider shift hours. Discrete 30-minute available slots are automatically generated (FR-02).',
+    selectDentist: 'Select Dentist',
+    workDate: 'Duty Date',
+    shiftStart: 'Shift Start Time',
+    shiftEnd: 'Shift End Time',
+    generateSlotsBtn: 'Generate 30-Min Duty Slots',
+    generatingSlots: 'Generating slots...',
+    existingRosters: 'Registered Clinic Duty Rosters',
+    slotsCountBadge: 'Time Slots',
+    // Customer Booking
+    bookingTitle: 'Book Dental Appointment',
+    bookingSub: 'Select a 30-minute consultation slot. Atomic transaction prevents double-booking conflicts (BR-01).',
+    step1: '1. Select Dentist & Date',
+    step2: '2. Select Available 30-Min Slot',
+    noSlots: 'No available slots found for selected date and dentist. Please choose another date or provider.',
+    slotAvailable: 'Book Slot',
+    slotBooked: 'Reserved',
+    bookModalTitle: 'Confirm Appointment Booking',
+    confirmBookBtn: 'Confirm Booking',
+    savingBooking: 'Saving booking...',
+    // My Appointments
+    myApptTitle: 'My Appointment History & Status',
+    noMyAppt: 'No appointments found in the system.',
+    cancelApptBtn: 'Cancel Appointment',
+    // Status text
+    statusConfirmed: 'Confirmed',
+    statusPending: 'Pending Review',
+    statusConflict: 'Cancelled (Conflict)',
+    statusCancelledCust: 'Cancelled by Patient',
+  },
+};
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [lang, setLang] = useState<Language>('th');
+  const t = I18N[lang];
+
+  const renderLanguageSwitcher = () => (
+    <div style={{ display: 'inline-flex', background: '#f0f4f2', borderRadius: '8px', padding: '2px', border: '1px solid var(--border)' }}>
+      <button
+        type="button"
+        onClick={() => setLang('th')}
+        style={{
+          padding: '4px 10px',
+          fontSize: '12px',
+          fontWeight: lang === 'th' ? 700 : 500,
+          background: lang === 'th' ? '#fff' : 'transparent',
+          color: lang === 'th' ? 'var(--primary)' : 'var(--text-muted)',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          boxShadow: lang === 'th' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        🇹🇭 TH
+      </button>
+      <button
+        type="button"
+        onClick={() => setLang('en')}
+        style={{
+          padding: '4px 10px',
+          fontSize: '12px',
+          fontWeight: lang === 'en' ? 700 : 500,
+          background: lang === 'en' ? '#fff' : 'transparent',
+          color: lang === 'en' ? 'var(--primary)' : 'var(--text-muted)',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          boxShadow: lang === 'en' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        🇬🇧 EN
+      </button>
+    </div>
+  );
+
   const [currentView, setCurrentView] = useState<'services' | 'booking' | 'my-appointments' | 'staff-appointments' | 'staff-schedules'>('booking');
   const selectedClinic = CLINIC_OPTIONS[0];
 
@@ -399,8 +600,15 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await api.logout();
-    setCurrentUser(null);
+    try {
+      await api.logout();
+    } catch (err) {
+      console.warn('Logout request failed, proceeding with local signout:', err);
+    } finally {
+      authStorage.clearToken();
+      setCurrentUser(null);
+      setCurrentView('booking');
+    }
   };
 
   const handleBookSlot = async () => {
@@ -467,7 +675,10 @@ export default function App() {
   // If not logged in, show Login Screen
   if (!currentUser) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'flex-end', width: '100%', maxWidth: '440px' }}>
+          {renderLanguageSwitcher()}
+        </div>
         <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '36px 32px' }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
             <div style={{
@@ -488,16 +699,16 @@ export default function App() {
               {selectedClinic.shortName}
             </div>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '-0.4px' }}>
-              {selectedClinic.name}
+              {t.clinicTitle}
             </h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '4px' }}>
-              {selectedClinic.tagline}
+              {t.tagline}
             </p>
           </div>
 
           <form onSubmit={handleLogin}>
             <div className="form-group">
-              <label className="form-label">อีเมลบัญชีผู้ใช้</label>
+              <label className="form-label">{t.emailLabel}</label>
               <input
                 className="form-control"
                 type="email"
@@ -508,7 +719,7 @@ export default function App() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">รหัสผ่าน</label>
+              <label className="form-label">{t.passwordLabel}</label>
               <input
                 className="form-control"
                 type="password"
@@ -524,13 +735,13 @@ export default function App() {
             )}
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={authLoading}>
-              {authLoading ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
+              {authLoading ? t.signingIn : t.signInBtn}
             </button>
           </form>
 
           <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid var(--border)' }}>
             <p style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px' }}>
-              บัญชีทดสอบด่วน (1-Click Test Accounts):
+              {t.quickLoginTitle}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <button
@@ -539,7 +750,7 @@ export default function App() {
                 style={{ fontSize: '13px', justifyContent: 'flex-start' }}
                 onClick={() => handleLogin(undefined, 'customer1@test.com')}
               >
-                เข้าสู่ระบบ: คนไข้ 1 (customer1@test.com)
+                {t.quickCust1}
               </button>
               <button
                 type="button"
@@ -547,7 +758,7 @@ export default function App() {
                 style={{ fontSize: '13px', justifyContent: 'flex-start' }}
                 onClick={() => handleLogin(undefined, 'customer2@test.com')}
               >
-                เข้าสู่ระบบ: คนไข้ 2 (customer2@test.com)
+                {t.quickCust2}
               </button>
               <button
                 type="button"
@@ -555,7 +766,7 @@ export default function App() {
                 style={{ fontSize: '13px', justifyContent: 'flex-start' }}
                 onClick={() => handleLogin(undefined, 'staff@clinic.com')}
               >
-                เข้าสู่ระบบ: เจ้าหน้าที่คลินิก (staff@clinic.com)
+                {t.quickStaff}
               </button>
             </div>
           </div>
@@ -588,24 +799,25 @@ export default function App() {
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: '17px', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
-                {selectedClinic.name}
+                {t.clinicTitle}
               </div>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                {selectedClinic.tagline}
+                {t.tagline}
               </span>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {renderLanguageSwitcher()}
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontWeight: 600, fontSize: '13.5px', color: 'var(--text-main)' }}>{currentUser.fullName}</div>
               <span className={`badge ${currentUser.role === 'STAFF' ? 'badge-confirmed' : 'badge-available'}`}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }}></span>
-                {currentUser.role === 'STAFF' ? 'เจ้าหน้าที่คลินิก' : 'คนไข้'}
+                {currentUser.role === 'STAFF' ? t.staffBadge : t.customerBadge}
               </span>
             </div>
             <button className="btn btn-secondary" onClick={handleLogout} style={{ fontSize: '13px', padding: '7px 14px' }}>
-              ออกจากระบบ
+              {t.logoutBtn}
             </button>
           </div>
         </div>
@@ -621,25 +833,25 @@ export default function App() {
                 className={`btn ${currentView === 'staff-appointments' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('staff-appointments')}
               >
-                จัดการนัดหมายทั้งหมด (Staff Dashboard)
+                {t.tabStaffDashboard}
               </button>
               <button
                 className={`btn ${currentView === 'staff-schedules' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('staff-schedules')}
               >
-                วางแผนตารางเวรหมอ (Schedule Planner)
+                {t.tabStaffPlanner}
               </button>
               <button
                 className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('booking')}
               >
-                มุมมองจองคิวคนไข้ (Customer Booking)
+                {t.tabCustomerView}
               </button>
               <button
                 className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('services')}
               >
-                เมนูบริการและราคา (Catalog)
+                {t.tabCatalog}
               </button>
             </>
           ) : (
@@ -648,19 +860,19 @@ export default function App() {
                 className={`btn ${currentView === 'services' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('services')}
               >
-                เมนูบริการและราคา (Service Catalog)
+                {t.tabCatalog}
               </button>
               <button
                 className={`btn ${currentView === 'booking' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('booking')}
               >
-                จองเวลานัดหมาย (Book Appointment)
+                {t.tabBooking}
               </button>
               <button
                 className={`btn ${currentView === 'my-appointments' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setCurrentView('my-appointments')}
               >
-                นัดหมายของฉัน (My Appointments)
+                {t.tabMyAppointments}
               </button>
             </>
           )}

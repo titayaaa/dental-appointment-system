@@ -90,6 +90,8 @@ export const api = {
   logout: async () => {
     try {
       await request('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      console.warn('Backend logout call returned error (session may already be expired):', err);
     } finally {
       authStorage.clearToken();
     }
