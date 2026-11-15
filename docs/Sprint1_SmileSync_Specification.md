@@ -3,7 +3,7 @@
 
 > **เอกสารข้อกำหนดทางวิศวกรรมฉบับสมบูรณ์ (Single Source of Truth - 11 Issues Complete Edition)**  
 > วิชา: CPE 334 Introduction to Software Engineering (Semester 1/2026)  
-> ทีมผู้พัฒนา: `titayaaa` (ฑิตญา ผ่องสกุล) & `jejaebubu` (ภัทรวดี แสน...)  
+> ทีมผู้พัฒนา: `titayaaa` (ฑิตญา ผ่องสกุล) & `jejaebubu` (พัฒนาวดี แสงเงินยอด)  
 > GitHub Repository: https://github.com/titayaaa/dental-appointment-system  
 > Branch หลัก: `main` (Production Release) | `staging` (Sprint Integration)
 
