@@ -106,21 +106,21 @@ fi
 # CHANGE ME: rename only if your group uses its own naming (then rename it in
 #            deploy.yml, release.sh, teardown.sh and the tests too).
 # ------------------------------------------------------------------------------
-REPO_NAME="s71990af"
-SQL_INSTANCE="s71990af-pg"
-DB_NAME="s71990af"
-DB_USER="s71990af"
-SERVICE_NAME="s71990af"
-MIGRATE_JOB_NAME="s71990af-migrate"
-SA_NAME="s71990af-runner"
+REPO_NAME="s719900af"
+SQL_INSTANCE="s719900af-pg"
+DB_NAME="s719900af"
+DB_USER="s719900af"
+SERVICE_NAME="s719900af"
+MIGRATE_JOB_NAME="s719900af-migrate"
+SA_NAME="s719900af-runner"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 SQL_CONN_NAME="${PROJECT_ID}:${REGION}:${SQL_INSTANCE}"
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${SERVICE_NAME}:latest"
 
 # Secret Manager secret names (values are never stored in this repo).
-SECRET_DB_URL="s71990af-database-url"
-SECRET_ADMIN_PASS="s71990af-admin-password"
-SECRET_DEMO_PASS="s71990af-demo-password"
+SECRET_DB_URL="s719900af-database-url"
+SECRET_ADMIN_PASS="s719900af-admin-password"
+SECRET_DEMO_PASS="s719900af-demo-password"
 
 GENERATED_ADMIN_PASSWORD=""
 GENERATED_DEMO_PASSWORD=""

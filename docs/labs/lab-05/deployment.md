@@ -3,7 +3,7 @@
 **Course:** CPE 334 Introduction to Software Engineering (Semester 1/2026)  
 **Project:** SmileSync Dental Clinic Appointment & Scheduling System  
 **Repository:** `titayaaa/dental-appointment-system`  
-**Group Prefix:** `s71990af`  
+**Group Prefix:** `s719900af`  
 **GCP Project ID:** `cpe-se-course-2026`  
 **Region:** `asia-southeast1`  
 
@@ -18,7 +18,7 @@
 | **ORM & Database** | Prisma ORM, PostgreSQL 16 | Relational data persistence |
 | **Packaging** | Docker (Multi-stage build) | Production container serving API + SPA on port 3000 |
 | **Cloud Hosting** | Google Cloud Run | Serverless container execution |
-| **Cloud Database** | Google Cloud SQL (PostgreSQL 16) | Managed database instance (`s71990af-pg`) |
+| **Cloud Database** | Google Cloud SQL (PostgreSQL 16) | Managed database instance (`s719900af-pg`) |
 | **CI/CD Pipeline** | GitHub Actions + Workload Identity Federation | Automated build, test, and zero-key deploy |
 
 ---
@@ -32,10 +32,10 @@ All settings are configured through environment variables. **No hardcoded secret
 | `PORT` | Number | Port the Express server listens on (default `3000`) | No | Injected by Cloud Run / `docker-compose.yml` |
 | `NODE_ENV` | String | Runtime mode (`development` / `production`) | No | System environment |
 | `CLIENT_URL` | String | Allowed CORS origin for frontend | No | `.env` or defaults to same origin |
-| `DATABASE_URL` | String | PostgreSQL connection string | **Yes** | Local `.env` / Cloud Run Secret Manager (`s71990af-database-url`) |
+| `DATABASE_URL` | String | PostgreSQL connection string | **Yes** | Local `.env` / Cloud Run Secret Manager (`s719900af-database-url`) |
 | `JWT_SECRET` | String | Secret key for signing authentication JWTs | **Yes** | Local `.env` / Cloud Run Environment Variable |
-| `ADMIN_PASSWORD` | String | Initial password for administrative staff seed | **Yes** | Secret Manager (`s71990af-admin-password`) |
-| `DEMO_USER_PASSWORD` | String | Initial password for demo customer seed | **Yes** | Secret Manager (`s71990af-demo-password`) |
+| `ADMIN_PASSWORD` | String | Initial password for administrative staff seed | **Yes** | Secret Manager (`s719900af-admin-password`) |
+| `DEMO_USER_PASSWORD` | String | Initial password for demo customer seed | **Yes** | Secret Manager (`s719900af-demo-password`) |
 | `SEED_DEMO_DATA` | Boolean | Whether migration job seeds baseline data | No | Job Environment Variable |
 
 ---
@@ -95,16 +95,16 @@ docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." smilesync:latest
 |---|---|---|
 | **GCP Project** | `cpe-se-course-2026` | Dedicated course project |
 | **Region** | `asia-southeast1` | Primary region (Singapore) |
-| **Cloud Run Service** | `s71990af` | Serves API and React SPA on HTTPS |
-| **Migration Job** | `s71990af-migrate` | Cloud Run job executing `prisma migrate deploy && prisma:seed` |
-| **Cloud SQL Instance** | `s71990af-pg` | PostgreSQL 16 database (`db-f1-micro`) |
-| **Artifact Registry** | `s71990af` | Container image repository |
-| **Image URI** | `asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s71990af/s71990af:<SHA>` | Tagged with 40-character commit SHA |
-| **Runtime Service Account** | `s71990af-runner@cpe-se-course-2026.iam.gserviceaccount.com` | Unprivileged service runtime identity |
-| **Deployer Service Account** | `s71990af-deployer@cpe-se-course-2026.iam.gserviceaccount.com` | CD deployment identity for GitHub Actions |
-| **Database URL Secret** | `s71990af-database-url` | Secret Manager secret containing `DATABASE_URL` |
-| **Admin Password Secret** | `s71990af-admin-password` | Secret Manager secret for staff password |
-| **Demo Password Secret** | `s71990af-demo-password` | Secret Manager secret for demo user password |
+| **Cloud Run Service** | `s719900af` | Serves API and React SPA on HTTPS |
+| **Migration Job** | `s719900af-migrate` | Cloud Run job executing `prisma migrate deploy && prisma:seed` |
+| **Cloud SQL Instance** | `s719900af-pg` | PostgreSQL 16 database (`db-f1-micro`) |
+| **Artifact Registry** | `s719900af` | Container image repository |
+| **Image URI** | `asia-southeast1-docker.pkg.dev/cpe-se-course-2026/s719900af/s719900af:<SHA>` | Tagged with 40-character commit SHA |
+| **Runtime Service Account** | `s719900af-runner@cpe-se-course-2026.iam.gserviceaccount.com` | Unprivileged service runtime identity |
+| **Deployer Service Account** | `s719900af-deployer@cpe-se-course-2026.iam.gserviceaccount.com` | CD deployment identity for GitHub Actions |
+| **Database URL Secret** | `s719900af-database-url` | Secret Manager secret containing `DATABASE_URL` |
+| **Admin Password Secret** | `s719900af-admin-password` | Secret Manager secret for staff password |
+| **Demo Password Secret** | `s719900af-demo-password` | Secret Manager secret for demo user password |
 
 ---
 
@@ -118,6 +118,6 @@ docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." smilesync:latest
    - Authenticates to GCP via Workload Identity Federation (no service account keys stored).
    - Builds and tags the Docker image with `${{ github.sha }}`.
    - Pushes image to Artifact Registry and resolves immutable digest `@sha256:...`.
-   - Executes non-destructive migration job (`s71990af-migrate`).
+   - Executes non-destructive migration job (`s719900af-migrate`).
    - Updates Cloud Run service traffic to the new revision.
    - Runs automated post-deployment smoke test (`deploy/smoke_test.py`) against live service URL.
