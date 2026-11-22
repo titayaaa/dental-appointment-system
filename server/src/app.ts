@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { Role } from '@prisma/client';
+import prisma from './lib/prisma';
 import authRoutes from './routes/auth.routes';
 import appointmentRoutes from './routes/appointment.routes';
 import adminRoutes from './routes/admin.routes';
@@ -20,6 +22,7 @@ app.use(express.json());
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
+    status: 'ok',
     success: true,
     data: {
       status: 'healthy',
@@ -27,6 +30,16 @@ app.get('/api/health', (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     },
   });
+});
+
+// Database readiness check endpoint (used by Cloud Run & smoke tests)
+app.get('/api/ready', async (req: Request, res: Response) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({ db: 'connected', status: 'ready' });
+  } catch (error) {
+    res.status(500).json({ db: 'disconnected', error: String(error) });
+  }
 });
 
 // Authentication routes
@@ -46,6 +59,13 @@ app.get('/api/test/staff-only', requireAuth, requireRole([Role.STAFF]), (req: Re
       message: 'Access granted: Authorized staff member',
     },
   });
+});
+
+// Serve frontend SPA in production
+const clientDist = path.resolve(__dirname, '../../client/dist');
+app.use(express.static(clientDist));
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(clientDist, 'index.html'));
 });
 
 export default app;
