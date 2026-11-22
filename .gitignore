@@ -1,3 +1,9 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
 # Dependencies
 node_modules/
 .pnp
