@@ -95,6 +95,7 @@ docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." smilesync:latest
 |---|---|---|
 | **GCP Project** | `cpe-se-course-2026` | Dedicated course project |
 | **Region** | `asia-southeast1` | Primary region (Singapore) |
+| **Public Cloud Run URL** | `https://s719900af-4d7hbszvwq-as.a.run.app` | Live HTTPS endpoint serving React SPA + Express API |
 | **Cloud Run Service** | `s719900af` | Serves API and React SPA on HTTPS |
 | **Migration Job** | `s719900af-migrate` | Cloud Run job executing `prisma migrate deploy && prisma:seed` |
 | **Cloud SQL Instance** | `s719900af-pg` | PostgreSQL 16 database (`db-f1-micro`) |
@@ -121,3 +122,29 @@ docker run -p 3000:3000 -e DATABASE_URL="postgresql://..." smilesync:latest
    - Executes non-destructive migration job (`s719900af-migrate`).
    - Updates Cloud Run service traffic to the new revision.
    - Runs automated post-deployment smoke test (`deploy/smoke_test.py`) against live service URL.
+
+---
+
+## 6. Rollback & Roll-Forward Procedure
+
+If a production release introduces a defect, the team can roll back to any previously pushed immutable commit SHA without re-running migrations or losing database records:
+
+1. Navigate to **GitHub → Actions → Deploy demo → Run workflow**.
+2. Keep branch set to `main`.
+3. Enter the full 40-character commit SHA of the target earlier release in `image_tag` (for example, Release 1: `1f2f5e63650a526808f10ea4b3759e47c5479c16`).
+4. Click **Run workflow**. `deploy/release.sh` runs in `ROLLBACK=true` mode (skips build, tests, and migration; resolves immutable `@sha256` digest; updates Cloud Run traffic to 100% on that revision; runs `deploy/smoke_test.py`).
+5. To **roll forward**, re-run the workflow with the newer commit SHA (or merge a fix PR into `main`).
+
+---
+
+## 7. Lab 5 Verification & Evidence Index
+
+| Check | Requirement | Artifact / Direct Link | Commit / Version | Verification Result |
+|---|---|---|---|---|
+| **C-01** | R-05 (CI on PRs) | PR #26, PR #28, PR #29, PR #30, PR #33, PR #34 (`CI & Docker Build / test-and-docker`) | `2421887`, `0ad0e21`, `9858dd5`, `dd381eb`, `8bd73fe` | Passed: 45/45 Vitest backend tests, deploy stub tests, smoke unit tests, frontend build, Docker build |
+| **C-02** | R-06 (Merge Gate) | Failing PR from `test/prove-gate` (Run `45045403646`) + Ruleset `protect-main` | `test/prove-gate` | Failed check `test-and-docker` blocked merge into `main` |
+| **C-03** | R-01, R-02 (Clean Docker Build) | `Dockerfile`, `docker-compose.yml`, `server/.env.example` | `1f2f5e63650a526808f10ea4b3759e47c5479c16` | Multi-stage build verified in CI and local clean build; zero secrets committed |
+| **C-04** | R-03 (Live Public URL) | `https://s719900af-4d7hbszvwq-as.a.run.app` (Deploy Run `45043830645`) | `1f2f5e63650a526808f10ea4b3759e47c5479c16` | `/api/health`, `/api/ready` (`db: connected`), `/api/dentists`, login, and booking workflow verified live |
+| **C-05** | R-04 (Persistence) | Appointment `APT-359310-866` created before Release 2 deploy (Run `45049181031`) | `1f2f5e6` → `420fa1f` | Record `APT-359310-866` survived redeploy and non-destructive idempotent migration/seed |
+| **C-06** | R-07, R-08 (Repeatable CD) | PR #33 (`staging`) → PR #34 (`main`) → Deploy Run `45049181031` + Badge fix PR #35 | `420fa1ff8f16dfae3b5eb752f0520156488fdde5` | Repeatable `staging` → `main` pipeline verified with commit SHA tag and immutable `@sha256` digest |
+

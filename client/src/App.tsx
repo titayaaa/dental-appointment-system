@@ -15,8 +15,8 @@ export const CLINIC_OPTIONS: ClinicBrand[] = [
     id: 'smilesync',
     name: 'SmileSync คลินิกทันตกรรม',
     nameEn: 'SmileSync Dental Clinic',
-    tagline: 'คลินิกทันตกรรมสมัยใหม่ ดูแลรอยยิ้มอย่างอ่อนโยนและตรงเวลา',
-    taglineEn: 'Contemporary Aesthetic Dentistry & Precision Scheduling',
+    tagline: 'คลินิกทันตกรรมสมัยใหม่ ดูแลรอยยิ้มอย่างอ่อนโยนและตรงเวลา · Cloud Release 2',
+    taglineEn: 'Contemporary Aesthetic Dentistry & Precision Scheduling · Cloud Release 2',
     shortName: 'SS',
   },
 ];
