@@ -61,10 +61,14 @@ app.get('/api/test/staff-only', requireAuth, requireRole([Role.STAFF]), (req: Re
   });
 });
 
-// Serve frontend SPA in production
-const clientDist = path.resolve(__dirname, '../../client/dist');
+// Serve frontend SPA in production from /app/client/dist (WORKDIR is /app/server)
+const clientDist = path.resolve(process.cwd(), '../client/dist');
 app.use(express.static(clientDist));
 app.get('*', (req: Request, res: Response) => {
+  if (req.path.startsWith('/api')) {
+    res.status(404).json({ success: false, error: 'Not found' });
+    return;
+  }
   res.sendFile(path.join(clientDist, 'index.html'));
 });
 

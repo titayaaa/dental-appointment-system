@@ -74,6 +74,7 @@ RUN apk add --no-cache openssl
 
 # --- Copy build output from the previous stages (no dev tooling) -------------
 COPY --from=server-builder /app/server/package*.json ./
+COPY --from=server-builder /app/server/tsconfig.json ./tsconfig.json
 COPY --from=server-builder /app/server/node_modules ./node_modules
 COPY --from=server-builder /app/server/dist ./dist
 COPY --from=server-builder /app/server/src ./src
@@ -82,7 +83,7 @@ COPY --from=server-builder /app/server/docker-entrypoint.sh ./docker-entrypoint.
 # The built SPA is served by the Express server from /app/client/dist.
 COPY --from=client-builder /app/client/dist /app/client/dist
 
-RUN chmod +x ./docker-entrypoint.sh
+RUN sed -i 's/\r$//' ./docker-entrypoint.sh && chmod +x ./docker-entrypoint.sh
 
 # --- Runtime configuration ----------------------------------------------------
 ENV NODE_ENV=production
@@ -95,6 +96,6 @@ EXPOSE 3000
 USER node
 
 # --- Start command ------------------------------------------------------------
-# CHANGE ME: replace `node dist/index.js` with your app's start command.
+# CHANGE ME: replace `node dist/src/index.js` with your app's start command.
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

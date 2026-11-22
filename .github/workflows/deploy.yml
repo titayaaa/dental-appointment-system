@@ -187,11 +187,11 @@ jobs:
       - name: Record deployment
         run: |
           {
-            echo '### TokTickIT demo deployment'
+            echo '### SmileSync demo deployment'
             echo "- Commit image tag: \`$IMAGE_TAG\`"
             echo "- Digest: \`$DEPLOYED_IMAGE\`"
             echo "- Rollback: $ROLLBACK"
             echo "- URL: $SERVICE_URL"
-            echo '- Smoke test: passed (health, readiness/DB, HTML, categories).'
+            echo '- Smoke test: passed (health, readiness/DB, HTML, dentists).'
             echo '- See smoke step for optional login check status.'
           } >> "$GITHUB_STEP_SUMMARY"
