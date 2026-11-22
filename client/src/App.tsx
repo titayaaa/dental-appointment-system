@@ -181,9 +181,9 @@ export type Language = 'th' | 'en';
 export const I18N = {
   th: {
     clinicTitle: 'SmileSync คลินิกทันตกรรม',
-    tagline: 'คลินิกทันตกรรมสมัยใหม่ ดูแลรอยยิ้มอย่างอ่อนโยนและตรงเวลา',
+    tagline: 'คลินิกทันตกรรมสมัยใหม่ ดูแลรอยยิ้มอย่างอ่อนโยนและตรงเวลา · Cloud Release 2',
     signInHeader: 'เข้าสู่ระบบบัญชี SmileSync',
-    signInSub: 'ระบบนัดหมายออนไลน์และติดตามสถานะการรักษา',
+    signInSub: 'ระบบนัดหมายออนไลน์และติดตามสถานะการรักษา (Release 2)',
     emailLabel: 'อีเมลบัญชีผู้ใช้',
     passwordLabel: 'รหัสผ่าน',
     signInBtn: 'เข้าสู่ระบบ',
@@ -328,9 +328,9 @@ export const I18N = {
   },
   en: {
     clinicTitle: 'SmileSync Dental Clinic',
-    tagline: 'Contemporary Aesthetic Dentistry & Precision Scheduling',
+    tagline: 'Contemporary Aesthetic Dentistry & Precision Scheduling · Cloud Release 2',
     signInHeader: 'Sign in to SmileSync',
-    signInSub: 'Online appointment scheduling and dental care tracking',
+    signInSub: 'Online appointment scheduling and dental care tracking (Release 2)',
     emailLabel: 'Email Address',
     passwordLabel: 'Password',
     signInBtn: 'Sign In',
