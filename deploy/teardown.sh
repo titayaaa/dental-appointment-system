@@ -54,16 +54,16 @@ fi
 # ------------------------------------------------------------------------------
 # Resource names (CHANGE ME: must match deploy/deploy.sh)
 # ------------------------------------------------------------------------------
-REPO_NAME="s71990af"
-SQL_INSTANCE="s71990af-pg"
-SERVICE_NAME="s71990af"
-MIGRATE_JOB_NAME="s71990af-migrate"
-SA_NAME="s71990af-runner"
+REPO_NAME="s719900af"
+SQL_INSTANCE="s719900af-pg"
+SERVICE_NAME="s719900af"
+MIGRATE_JOB_NAME="s719900af-migrate"
+SA_NAME="s719900af-runner"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 
-SECRET_DB_URL="s71990af-database-url"
-SECRET_ADMIN_PASS="s71990af-admin-password"
-SECRET_DEMO_PASS="s71990af-demo-password"
+SECRET_DB_URL="s719900af-database-url"
+SECRET_ADMIN_PASS="s719900af-admin-password"
+SECRET_DEMO_PASS="s719900af-demo-password"
 
 echo "=================================================================="
 echo "WARNING: This will permanently delete TokTickIT resources in:"
