@@ -15,7 +15,7 @@ describe('Authentication & Role Middleware Integration Tests', () => {
     it('should return 200 OK with health status envelope', async () => {
       const res = await request(app).get('/api/health');
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(999);
       expect(res.body.success).toBe(true);
       expect(res.body.data.status).toBe('healthy');
       expect(res.body.data.service).toBe('SmileSync Dental Clinic API');
