@@ -51,7 +51,7 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
         .set('Authorization', `Bearer ${customerToken}`)
         .send({
           dentistId: mockDentistId,
-          workDate: '2026-11-25',
+          workDate: '2028-11-25',
           startTime: '09:00',
           endTime: '12:00',
         });
@@ -81,7 +81,7 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
         .set('Authorization', `Bearer ${staffToken}`)
         .send({
           dentistId: 'non-existent-dentist',
-          workDate: '2026-11-25',
+          workDate: '2028-11-25',
           startTime: '09:00',
           endTime: '12:00',
         });
@@ -127,7 +127,7 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
         .set('Authorization', `Bearer ${staffToken}`)
         .send({
           dentistId: mockDentistId,
-          workDate: '2026-11-25',
+          workDate: '2028-11-25',
           startTime: '14:00',
           endTime: '11:00',
         });
@@ -148,9 +148,9 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
       const mockSchedule = {
         id: 'sched-101',
         dentistId: mockDentistId,
-        workDate: new Date('2026-11-25T00:00:00.000Z'),
-        startTime: new Date('2026-11-25T09:00:00.000Z'),
-        endTime: new Date('2026-11-25T12:00:00.000Z'),
+        workDate: new Date('2028-11-25T00:00:00.000Z'),
+        startTime: new Date('2028-11-25T09:00:00.000Z'),
+        endTime: new Date('2028-11-25T12:00:00.000Z'),
         status: ScheduleStatus.ACTIVE,
       };
 
@@ -170,7 +170,7 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
         .set('Authorization', `Bearer ${staffToken}`)
         .send({
           dentistId: mockDentistId,
-          workDate: '2026-11-25',
+          workDate: '2028-11-25',
           startTime: '09:00',
           endTime: '12:00',
         });
@@ -189,9 +189,9 @@ describe('Feature F-03: Staff Schedule Planner & Master Appointment Management',
         {
           id: 'sched-101',
           dentistId: mockDentistId,
-          workDate: new Date('2026-11-25'),
-          startTime: new Date('2026-11-25T09:00:00.000Z'),
-          endTime: new Date('2026-11-25T12:00:00.000Z'),
+          workDate: new Date('2028-11-25'),
+          startTime: new Date('2028-11-25T09:00:00.000Z'),
+          endTime: new Date('2028-11-25T12:00:00.000Z'),
           status: ScheduleStatus.ACTIVE,
           dentist: { id: mockDentistId, name: 'ทพ.สมชาย ใจดี', specialty: 'ทันตกรรมทั่วไป' },
           timeSlots: [{ id: 'slot-1', status: SlotStatus.AVAILABLE }],

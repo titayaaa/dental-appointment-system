@@ -16,7 +16,10 @@ async function main() {
   // 2. Upsert Seed Users (Non-destructive / idempotent)
   const staffUser = await prisma.user.upsert({
     where: { email: 'staff@clinic.com' },
-    update: {},
+    update: {
+      passwordHash: staffPasswordHash,
+      role: Role.STAFF,
+    },
     create: {
       email: 'staff@clinic.com',
       passwordHash: staffPasswordHash,
